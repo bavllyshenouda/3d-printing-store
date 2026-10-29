@@ -41,7 +41,7 @@ export async function GET(request: Request) {
 
     // Enrich with order statistics for each customer
     const customerIds = (profiles || []).map((p) => p.id);
-    let ordersByCustomer: Record<string, { count: number; total_spent: number }> = {};
+    const ordersByCustomer: Record<string, { count: number; total_spent: number }> = {};
 
     if (customerIds.length > 0) {
       const { data: customerOrders } = await supabase

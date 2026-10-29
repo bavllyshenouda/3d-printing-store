@@ -9,9 +9,9 @@ export async function POST(request: Request) {
       return auth.response;
     }
 
-    let body: any;
+    let body: Record<string, unknown>;
     try {
-      body = await request.json();
+      body = (await request.json()) as Record<string, unknown>;
     } catch {
       return NextResponse.json(
         { success: false, error: "Invalid JSON body" },
@@ -19,7 +19,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const { order_id, message_type = "order_confirmation" } = body;
+    const order_id = typeof body.order_id === "string" ? body.order_id : undefined;
+    const message_type =
+      typeof body.message_type === "string" ? body.message_type : "order_confirmation";
 
     if (!order_id || typeof order_id !== "string") {
       return NextResponse.json(
@@ -52,7 +54,7 @@ export async function POST(request: Request) {
       success: true,
       data: result,
     });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

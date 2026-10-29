@@ -50,9 +50,9 @@ export async function POST(request: Request) {
     }
 
     // 2. Parse payload safely
-    let payload: any;
+    let payload: Record<string, unknown>;
     try {
-      payload = JSON.parse(rawBody);
+      payload = JSON.parse(rawBody) as Record<string, unknown>;
     } catch {
       return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
     }
@@ -62,11 +62,18 @@ export async function POST(request: Request) {
       defaultWhatsAppProvider.parseInboundPayload(payload);
 
     // Also support direct simulated/test payloads in Postman: { senderPhone, messageText, providerMessageId }
-    if (events.length === 0 && payload?.senderPhone && payload?.messageText) {
+    if (
+      events.length === 0 &&
+      typeof payload?.senderPhone === "string" &&
+      typeof payload?.messageText === "string"
+    ) {
       events.push({
         senderPhone: payload.senderPhone,
         messageText: payload.messageText,
-        providerMessageId: payload.providerMessageId || `sim_${Date.now()}`,
+        providerMessageId:
+          typeof payload.providerMessageId === "string"
+            ? payload.providerMessageId
+            : `sim_${Date.now()}`,
         timestamp: new Date().toISOString(),
       });
     }

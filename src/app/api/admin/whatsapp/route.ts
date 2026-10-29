@@ -62,7 +62,7 @@ export async function GET(request: Request) {
         total_pages: Math.ceil((count || 0) / limit),
       },
     });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

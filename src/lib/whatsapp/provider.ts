@@ -142,11 +142,12 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
   /**
    * Parses incoming webhook payload from WhatsApp Cloud API format.
    */
-  parseInboundPayload(body: any): InboundMessageEvent[] {
+  parseInboundPayload(body: unknown): InboundMessageEvent[] {
     const events: InboundMessageEvent[] = [];
+    const payload = body as Record<string, unknown> | null | undefined;
 
     // Check Meta webhook structure
-    const entries = body?.entry;
+    const entries = payload?.entry;
     if (Array.isArray(entries)) {
       for (const entry of entries) {
         for (const change of entry?.changes || []) {
