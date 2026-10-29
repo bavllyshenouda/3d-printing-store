@@ -1,0 +1,658 @@
+{
+  "info": {
+    "_postman_id": "e8d7d9a1-0f74-4b57-a9dc-1b379c3f0b21",
+    "name": "3D Printing Store - Phase 1 Auth & Customer Profiles",
+    "description": "Comprehensive Postman test collection for Phase 1 Authentication, Customer Profiles, Authorization, and Supabase RLS policies.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "supabaseUrl",
+      "value": "https://iynlpnokyhdjdjscrvkc.supabase.co",
+      "type": "string"
+    },
+    {
+      "key": "supabaseAnonKey",
+      "value": "sb_publishable_mDB1O0jRmU44ZnsgfpBD5w_StnswKuK",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImY3MTkwZWJhLTZmMzItNGIzMy04YjkzLTZiZTJjNDMxZDRmZiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2l5bmxwbm9reWhkamRqc2NydmtjLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5OGI5OWE4NS0wZjljLTQ5ZTMtOWM3OS02ODIyN2RjMjAzN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzkzMjE5NzI2LCJpYXQiOjE3OTMyMTYxMjYsImVtYWlsIjoiYmF2dm81NUBnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYmF2dm81NUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZmlyc3RfbmFtZSI6IkFobWVkIiwibGFzdF9uYW1lIjoiSGFzc2FuIiwicGhvbmUiOiIwMTAxMjM0NTY3OCIsInBob25lX3ZlcmlmaWVkIjpmYWxzZSwic3ViIjoiOThiOTlhODUtMGY5Yy00OWUzLTljNzktNjgyMjdkYzIwMzdjIn0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3OTMyMTYxMjZ9XSwic2Vzc2lvbl9pZCI6Ijg0NjEwNDhjLTFlMDctNDUxOS04NmU0LTkxY2IwNzgyMjA5NCIsImlzX2Fub255bW91cyI6ZmFsc2V9.awgNSpAdK344kA44s96SBtUCiNwthGQfFrue6xNSXDLT8S3oZxdZ4YhgrcdWGhHRWXFcfmp2xWOgCPsCLZB0sw",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "skhsr7suzotu",
+      "type": "string"
+    },
+    {
+      "key": "customerEmail",
+      "value": "test-customer@example.com",
+      "type": "string"
+    },
+    {
+      "key": "customerPassword",
+      "value": "SecurePass123!",
+      "type": "string"
+    },
+    {
+      "key": "targetUserId",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Register a new customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Registration successful response format', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.have.property('user');",
+              "});",
+              "if (jsonData.data && jsonData.data.session && jsonData.data.session.access_token) {",
+              "    pm.environment.set('accessToken', jsonData.data.session.access_token);",
+              "    pm.environment.set('refreshToken', jsonData.data.session.refresh_token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"customer-{{$timestamp}}@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"first_name\": \"Ahmed\",\n  \"last_name\": \"Hassan\",\n  \"phone\": \"01012345678\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        },
+        "description": "Registers a new customer with valid email, password, first name, last name, and an Egyptian phone number (010, 011, 012, or 015, exactly 11 digits)."
+      }
+    },
+    {
+      "name": "2. Register with invalid input (Invalid Phone & Short Password)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Validation failure details returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.eql('Validation failed');",
+              "    pm.expect(jsonData.details).to.have.property('phone');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"invalid-phone@example.com\",\n  \"password\": \"123\",\n  \"first_name\": \"Ahmed\",\n  \"last_name\": \"Hassan\",\n  \"phone\": \"01312345678\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        },
+        "description": "Attempts registration with an invalid phone prefix (013 is not an Egyptian mobile prefix) and a password less than 6 characters. Must return 400."
+      }
+    },
+    {
+      "name": "3. Log in with valid credentials",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Tokens returned and saved to environment', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.session).to.have.property('access_token');",
+              "    pm.environment.set('accessToken', jsonData.data.session.access_token);",
+              "    pm.environment.set('refreshToken', jsonData.data.session.refresh_token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{customerPassword}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Logs in an existing customer using valid email and password credentials. Automatically sets {{accessToken}} in the environment."
+      }
+    },
+    {
+      "name": "4. Log in with invalid credentials",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Authentication error message returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"IncorrectPassword999!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Attempts login with incorrect password. Must return 401 Unauthorized without issuing any session."
+      }
+    },
+    {
+      "name": "5. Retrieve the current authenticated user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('User identity returned securely', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.user).to.have.property('id');",
+              "    pm.expect(jsonData.data).to.have.property('is_admin');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "me"
+          ]
+        },
+        "description": "Calls getUser() cryptographically verifying the access token against Supabase Auth. Also checks membership in the admins table."
+      }
+    },
+    {
+      "name": "6. Retrieve the customer's profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Profile data returned', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.profile).to.have.property('id');",
+              "    pm.expect(jsonData.data.profile).to.have.property('first_name');",
+              "    pm.expect(jsonData.data.profile).to.have.property('last_name');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "profile"
+          ]
+        },
+        "description": "Retrieves the authenticated customer's profile row. RLS policy 'Read own profile' guarantees isolation."
+      }
+    },
+    {
+      "name": "7. Update the customer's own profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Profile updated successfully', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.profile.first_name).to.eql('AhmedUpdated');",
+              "    pm.expect(jsonData.data.profile.phone).to.eql('01123456789');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\": \"AhmedUpdated\",\n  \"last_name\": \"HassanUpdated\",\n  \"phone\": \"01123456789\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "profile"
+          ]
+        },
+        "description": "Updates customer's first name, last name, and phone (validated as valid Egyptian phone). Enforced by RLS 'Update own profile'."
+      }
+    },
+    {
+      "name": "8a. Attempt to update another customer's profile (Next.js Endpoint)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Forbidden error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Forbidden');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\": \"MaliciousName\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/profile/{{targetUserId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "profile",
+            "{{targetUserId}}"
+          ]
+        },
+        "description": "Verifies application-layer security: A regular customer attempting to update a profile whose ID differs from their own receives 403 Forbidden."
+      }
+    },
+    {
+      "name": "8b. Attempt to update another customer's profile (Direct Supabase RLS)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK (with 0 rows updated)', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('PostgreSQL RLS blocks update, returning empty array', function () {",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "    pm.expect(jsonData.length).to.eql(0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{supabaseAnonKey}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Prefer",
+            "value": "return=representation"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\": \"DirectRLSBypassAttempt\"\n}"
+        },
+        "url": {
+          "raw": "{{supabaseUrl}}/rest/v1/profiles?id=eq.{{targetUserId}}",
+          "host": [
+            "{{supabaseUrl}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "profiles"
+          ],
+          "query": [
+            {
+              "key": "id",
+              "value": "eq.{{targetUserId}}"
+            }
+          ]
+        },
+        "description": "Direct Supabase REST test: verifies that even if an attacker bypasses the Next.js API, PostgreSQL RLS policy 'Update own profile' (id = auth.uid()) silences the update, affecting 0 rows."
+      }
+    },
+    {
+      "name": "9. Attempt to access protected functionality without authentication",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Authentication required message returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Unauthorized');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "profile"
+          ]
+        },
+        "description": "Sends a request to /api/profile without any Authorization header or session cookies. Must return 401 Unauthorized."
+      }
+    },
+    {
+      "name": "10. Attempt to access administrator functionality as a regular customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Forbidden message returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Forbidden');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/metrics",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "metrics"
+          ]
+        },
+        "description": "Accesses an admin-only endpoint with a customer access token. Verifies the user is not in the admins table and returns 403 Forbidden."
+      }
+    },
+    {
+      "name": "11. Test logout and session invalidation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Logged out message returned', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.message).to.eql('Logged out successfully');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/logout",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "logout"
+          ]
+        },
+        "description": "Calls /api/auth/logout which triggers supabase.auth.signOut(), invalidating the refresh token and session cookies."
+      }
+    },
+    {
+      "name": "12. Test email confirmation behavior (Supabase Auth endpoint check)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Registration completed or email verification enforced', function () {",
+              "    pm.expect([200, 201, 400]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{supabaseAnonKey}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"email-confirm-check-{{$timestamp}}@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+        },
+        "url": {
+          "raw": "{{supabaseUrl}}/auth/v1/signup",
+          "host": [
+            "{{supabaseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "v1",
+            "signup"
+          ]
+        },
+        "description": "Tests direct Supabase Auth signup behavior: If 'Confirm email' is enabled in the Supabase Dashboard, response returns user with empty session or pending confirmation."
+      }
+    }
+  ]
+}

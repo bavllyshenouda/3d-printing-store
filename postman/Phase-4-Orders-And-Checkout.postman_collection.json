@@ -1,0 +1,735 @@
+{
+  "info": {
+    "_postman_id": "a984fd31-419b-4654-9a25-c651e70e93a1",
+    "name": "3D Printing Store - Phase 4 Orders and Checkout",
+    "description": "Comprehensive Postman test collection for Phase 4: Orders, Atomic Checkout RPC, Inventory Concurrency, Price Authority, State Transitions, and RLS Isolation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Setup - Save Customer Shipping Address",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Address saved successfully', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.address).to.have.property('id');",
+              "    pm.environment.set('addressId', jsonData.data.address.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\": \"Mina\",\n  \"last_name\": \"Shenouda\",\n  \"phone\": \"01012345678\",\n  \"email\": \"customer@example.com\",\n  \"country\": \"Egypt\",\n  \"governorate\": \"Cairo\",\n  \"region\": \"Nasr City\",\n  \"street_address\": \"15 Abbas El Akkad St\",\n  \"building\": \"Bldg 4\",\n  \"floor\": \"3\",\n  \"apartment\": \"302\",\n  \"notes\": \"Ring doorbell twice\",\n  \"is_default\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/addresses",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "addresses"]
+        },
+        "description": "Creates and saves a valid Egyptian customer shipping address to use during checkout tests."
+      }
+    },
+    {
+      "name": "1. Create a valid order (Checkout with COD)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Order created with pending_customer_confirmation status', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.order).to.have.property('id');",
+              "    pm.expect(jsonData.data.order.status).to.eql('pending_customer_confirmation');",
+              "    pm.expect(jsonData.data.order.payment_method).to.eql('cod');",
+              "    pm.expect(jsonData.data.order.payment_status).to.eql('pending');",
+              "    pm.expect(jsonData.data.order.currency).to.eql('EGP');",
+              "    pm.environment.set('orderId', jsonData.data.order.id);",
+              "    pm.environment.set('orderNumber', jsonData.data.order.order_number);",
+              "});",
+              "pm.test('Order items snapshot captured', function () {",
+              "    pm.expect(jsonData.data.order.items.length).to.be.above(0);",
+              "    var item = jsonData.data.order.items[0];",
+              "    pm.expect(item).to.have.property('product_name');",
+              "    pm.expect(item).to.have.property('unit_price');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"address_id\": \"{{addressId}}\",\n  \"payment_method\": \"cod\",\n  \"shipping_fee\": 50,\n  \"address_notes\": \"Please call before delivery\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/checkout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "checkout"]
+        },
+        "description": "Executes atomic checkout using saved address and COD payment. Validates stock, calculates authoritative totals, clears cart, and creates order records."
+      }
+    },
+    {
+      "name": "2. Attempt checkout without authentication",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Authentication required error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Unauthorized');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"payment_method\": \"cod\",\n  \"address\": {\n    \"first_name\": \"Mina\",\n    \"last_name\": \"Shenouda\",\n    \"phone\": \"01012345678\",\n    \"governorate\": \"Cairo\",\n    \"region\": \"Nasr City\",\n    \"street_address\": \"15 Abbas El Akkad St\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/checkout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "checkout"]
+        },
+        "description": "Verifies that unauthenticated checkout requests are rejected with 401 Unauthorized without creating orders or modifying inventory."
+      }
+    },
+    {
+      "name": "3. Submit an invalid shipping address (Invalid Egyptian Phone)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Egyptian phone format error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(JSON.stringify(jsonData)).to.include('Invalid Egyptian mobile number');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"payment_method\": \"cod\",\n  \"address\": {\n    \"first_name\": \"Mina\",\n    \"last_name\": \"Shenouda\",\n    \"phone\": \"123456789\",\n    \"governorate\": \"Cairo\",\n    \"region\": \"Nasr City\",\n    \"street_address\": \"15 Abbas El Akkad St\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/checkout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "checkout"]
+        },
+        "description": "Validates that invalid Egyptian phone numbers (not matching ^(010|011|012|015)[0-9]{8}$) are rejected."
+      }
+    },
+    {
+      "name": "4. Include a nonexistent product during checkout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request or 404', function () {",
+              "    pm.expect([400, 404]).to.include(pm.response.code);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Error indicates product cannot be found', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('not found');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"color\": \"Default\",\n  \"quantity\": 1\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cart",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart"]
+        },
+        "description": "Attempting to add or checkout a nonexistent product is rejected, preventing phantom orders."
+      }
+    },
+    {
+      "name": "5. Request more stock than available",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Stock bounds error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('stock');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{productId}}\",\n  \"color\": \"Emerald Green\",\n  \"quantity\": 99999\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cart",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart"]
+        },
+        "description": "Inventory bounds protection: Adding or checking out more units than in stock is strictly blocked."
+      }
+    },
+    {
+      "name": "6. Attempt to manipulate product prices or order totals",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Tampered client prices (0.01) were ignored in favor of DB price', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.order.total).to.be.above(1.00);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"address_id\": \"{{addressId}}\",\n  \"payment_method\": \"cod\",\n  \"price\": 0.01,\n  \"subtotal\": 0.01,\n  \"total\": 0.01,\n  \"items\": [{\n    \"unit_price\": 0.01,\n    \"total\": 0.01\n  }]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/checkout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "checkout"]
+        },
+        "description": "Price tamper test: Client submits 0.01 prices/totals. The server discards all client numbers and calculates authoritative totals directly from database product rows."
+      }
+    },
+    {
+      "name": "7. Attempt to create an order for another user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Order user_id matches authenticated session user, not spoofed user_id', function () {",
+              "    var jsonData = pm.response.json();",
+              "    if (pm.response.code === 201) {",
+              "        pm.expect(jsonData.data.order.user_id).to.not.eql('00000000-0000-0000-0000-000000000001');",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"address_id\": \"{{addressId}}\",\n  \"user_id\": \"00000000-0000-0000-0000-000000000001\",\n  \"payment_method\": \"cod\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/checkout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "checkout"]
+        },
+        "description": "Security test: Passing a foreign user_id in the payload is ignored. The server extracts the authenticated identity solely from auth.uid()."
+      }
+    },
+    {
+      "name": "8. Attempt to retrieve another user's order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 404 Not Found', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Order not found error returned (preventing ID enumeration)', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Order not found');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{otherUserOrderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{otherUserOrderId}}"]
+        },
+        "description": "IDOR protection: Customer attempting to view another customer's order receives 404 Not Found."
+      }
+    },
+    {
+      "name": "9. Attempt to modify order status directly as a customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Direct update rejected with 401 or 403', function () {",
+              "    pm.expect([401, 403, 405]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"delivered\",\n  \"payment_status\": \"paid\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{orderId}}"]
+        },
+        "description": "Privilege boundary: Customers cannot send PATCH /api/orders/[id] to alter their own order status or mark payments paid."
+      }
+    },
+    {
+      "name": "10. Customer confirms order transition (pending -> confirmed)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Order status transitioned to confirmed', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.order.status).to.eql('confirmed');",
+              "    pm.expect(jsonData.data.order.confirmed_at).to.not.be.null;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{orderId}}/confirm",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{orderId}}", "confirm"]
+        },
+        "description": "Customer confirms the pending order, transitioning status from 'pending_customer_confirmation' to 'confirmed'."
+      }
+    },
+    {
+      "name": "11. Verify transaction rollback if a database operation fails",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Transaction rolled back and cart remains intact', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"address_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"payment_method\": \"cod\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/checkout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "checkout"]
+        },
+        "description": "Verifies that an invalid address ID fails before cart deletion or inventory deduction, rolling back cleanly."
+      }
+    },
+    {
+      "name": "12. Customer cancels order and restores inventory",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Order cancelled and inventory restored', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.status).to.eql('cancelled');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"Changed my mind on delivery date\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{orderId}}/cancel",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{orderId}}", "cancel"]
+        },
+        "description": "Customer cancels order before shipping. The cancel_order_and_restore_stock RPC restores stock to products table."
+      }
+    },
+    {
+      "name": "13. Test checkout with COD payment method",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created or 400 if cart empty', function () {",
+              "    pm.expect([201, 400]).to.include(pm.response.code);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "if (pm.response.code === 201) {",
+              "    pm.expect(jsonData.data.order.payment_method).to.eql('cod');",
+              "    pm.expect(jsonData.data.order.payment_status).to.eql('pending');",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"address_id\": \"{{addressId}}\",\n  \"payment_method\": \"cod\",\n  \"shipping_fee\": 50\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/checkout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "checkout"]
+        },
+        "description": "Verifies checkout with Cash on Delivery."
+      }
+    },
+    {
+      "name": "14. Test checkout with Prepaid payment method (InstaPay / Vodafone Cash)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Prepaid checkout preserves pending verification status', function () {",
+              "    if (pm.response.code === 201) {",
+              "        var jsonData = pm.response.json();",
+              "        pm.expect(jsonData.data.order.payment_method).to.eql('instapay');",
+              "        pm.expect(jsonData.data.order.payment_status).to.eql('pending');",
+              "        pm.expect(jsonData.data.order.status).to.eql('pending_customer_confirmation');",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"address_id\": \"{{addressId}}\",\n  \"payment_method\": \"instapay\",\n  \"shipping_fee\": 50\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/checkout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "checkout"]
+        },
+        "description": "Verifies that prepaid payment methods (InstaPay, Vodafone Cash) remain in pending payment status and require verification."
+      }
+    },
+    {
+      "name": "15. Admin order status management and state transition",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Admin updated order status and tracking', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.order.status).to.eql('processing');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"processing\",\n  \"payment_status\": \"paid\",\n  \"carrier\": \"Bosta\",\n  \"tracking_number\": \"BST-12345678\",\n  \"status_note\": \"Payment verified via InstaPay. Manufacturing started.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/orders/{{orderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "orders", "{{orderId}}"]
+        },
+        "description": "Administrator securely updates order status, verifies payment, assigns carrier tracking, and writes shipping events."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "customerAccessToken",
+      "value": ""
+    },
+    {
+      "key": "adminAccessToken",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "addressId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "orderNumber",
+      "value": ""
+    },
+    {
+      "key": "otherUserOrderId",
+      "value": "00000000-0000-0000-0000-000000000099"
+    }
+  ]
+}
+

@@ -1,0 +1,683 @@
+{
+  "info": {
+    "_postman_id": "b92a34fc-8d19-4841-a620-7f28df1d5301",
+    "name": "3D Printing Store - Phase 2 Products & Categories",
+    "description": "Comprehensive Postman test collection for Phase 2: Public Product Operations, Admin Product Management, Validation, Storage Uploads, and RLS Enforcement.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "supabaseUrl",
+      "value": "https://iynlpnokyhdjdjscrvkc.supabase.co",
+      "type": "string"
+    },
+    {
+      "key": "supabaseAnonKey",
+      "value": "sb_publishable_mDB1O0jRmU44ZnsgfpBD5w_StnswKuK",
+      "type": "string"
+    },
+    {
+      "key": "adminAccessToken",
+      "value": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImY3MTkwZWJhLTZmMzItNGIzMy04YjkzLTZiZTJjNDMxZDRmZiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2l5bmxwbm9reWhkamRqc2NydmtjLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5OGI5OWE4NS0wZjljLTQ5ZTMtOWM3OS02ODIyN2RjMjAzN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzkzMjI2MDU3LCJpYXQiOjE3OTMyMjI0NTcsImVtYWlsIjoiYmF2dm81NUBnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYmF2dm81NUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZmlyc3RfbmFtZSI6IkFobWVkIiwibGFzdF9uYW1lIjoiSGFzc2FuIiwicGhvbmUiOiIwMTAxMjM0NTY3OCIsInBob25lX3ZlcmlmaWVkIjpmYWxzZSwic3ViIjoiOThiOTlhODUtMGY5Yy00OWUzLTljNzktNjgyMjdkYzIwMzdjIn0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3OTMyMjI0NTd9XSwic2Vzc2lvbl9pZCI6IjY0YjI4ZmMzLTJhMWYtNDNhYS1hM2ViLWJhNzljZGFiYjYwZCIsImlzX2Fub255bW91cyI6ZmFsc2V9.59s7IwjsvEV4u732u_uSoSuPYEKhJC-XBiC_ohz6A8S6b1Hu_tn0KtUhyZwbLYL2YKgq7mn_ntBozj66MLVB0Q",
+      "type": "string"
+    },
+    {
+      "key": "customerAccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "ba835da9-b41d-4a56-8d7d-d6f13f29dbe9",
+      "type": "string"
+    },
+    {
+      "key": "productSlug",
+      "value": "articulated-dragon-1793222540",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Retrieve product categories",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Categories array returned', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.have.property('categories');",
+              "    pm.expect(jsonData.data.categories).to.be.an('array');",
+              "});",
+              "if (jsonData.data.categories.length > 0) {",
+              "    pm.environment.set('categoryId', jsonData.data.categories[0].id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/categories",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "categories"]
+        },
+        "description": "Public endpoint: Retrieves active categories ordered by sort_order and name."
+      }
+    },
+    {
+      "name": "2. Retrieve published products",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Published products and pagination returned', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.have.property('products');",
+              "    pm.expect(jsonData.data).to.have.property('pagination');",
+              "});",
+              "if (jsonData.data.products.length > 0) {",
+              "    pm.environment.set('productId', jsonData.data.products[0].id);",
+              "    pm.environment.set('productSlug', jsonData.data.products[0].slug);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products"]
+        },
+        "description": "Public storefront endpoint: Retrieves published products with category and images."
+      }
+    },
+    {
+      "name": "3. Retrieve an existing product by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Single product returned with category and images', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.product).to.have.property('id');",
+              "    pm.expect(jsonData.data.product).to.have.property('name');",
+              "    pm.expect(jsonData.data.product).to.have.property('price');",
+              "    pm.expect(jsonData.data.product).to.have.property('available_colors');",
+              "    pm.expect(jsonData.data.product).to.have.property('stock');",
+              "    pm.expect(jsonData.data.product).to.have.property('images');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products/{{productId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "{{productId}}"]
+        },
+        "description": "Public endpoint: Retrieves product details by UUID or slug."
+      }
+    },
+    {
+      "name": "4. Request a nonexistent product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 404 Not Found', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Error response returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.eql('Product not found');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "00000000-0000-0000-0000-000000000000"]
+        },
+        "description": "Verifies 404 behavior when requesting a product ID that does not exist."
+      }
+    },
+    {
+      "name": "5. Search products",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Search results returned', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.products).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products?search=dragon",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products"],
+          "query": [
+            {
+              "key": "search",
+              "value": "dragon"
+            }
+          ]
+        },
+        "description": "Searches published products by matching terms against name or description."
+      }
+    },
+    {
+      "name": "6. Filter products by category and price",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Filtered products returned within price bounds', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    jsonData.data.products.forEach(function(p) {",
+              "        pm.expect(p.price).to.be.at.least(10);",
+              "        pm.expect(p.price).to.be.at.most(500);",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products?category={{categoryId}}&min_price=10&max_price=500",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products"],
+          "query": [
+            {
+              "key": "category",
+              "value": "{{categoryId}}"
+            },
+            {
+              "key": "min_price",
+              "value": "10"
+            },
+            {
+              "key": "max_price",
+              "value": "500"
+            }
+          ]
+        },
+        "description": "Filters products by category ID/slug and price range."
+      }
+    },
+    {
+      "name": "7. Test sorting and pagination",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Pagination metadata returned properly', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.pagination.page).to.eql(1);",
+              "    pm.expect(jsonData.data.pagination.limit).to.eql(5);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products?sort=price_asc&page=1&limit=5",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products"],
+          "query": [
+            {
+              "key": "sort",
+              "value": "price_asc"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        },
+        "description": "Tests ascending price sorting and explicit limit/page pagination."
+      }
+    },
+    {
+      "name": "8. Create a product as an administrator",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Product created with attributes', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.product).to.have.property('id');",
+              "    pm.environment.set('productId', jsonData.data.product.id);",
+              "    pm.environment.set('productSlug', jsonData.data.product.slug);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Articulated Dragon\",\n  \"slug\": \"articulated-dragon-{{$timestamp}}\",\n  \"description\": \"Print-in-place flexible 3D printed dragon figurine.\",\n  \"price\": 299.99,\n  \"stock\": 25,\n  \"material\": \"Silk PLA\",\n  \"available_colors\": [\"Emerald Green\", \"Metallic Copper\", \"Midnight Black\"],\n  \"is_active\": true,\n  \"is_featured\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products"]
+        },
+        "description": "Administrator endpoint: Creates a ready-made product with fixed price, product-level stock, and color list."
+      }
+    },
+    {
+      "name": "9. Update a product as an administrator",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Product fields updated successfully', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.product.price).to.eql(349.50);",
+              "    pm.expect(jsonData.data.product.stock).to.eql(40);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 349.50,\n  \"stock\": 40,\n  \"description\": \"Updated description with high resolution print settings.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products/{{productId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products", "{{productId}}"]
+        },
+        "description": "Administrator endpoint: Updates product information (price, stock, description)."
+      }
+    },
+    {
+      "name": "10. Publish or unpublish a product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Product status toggled/updated', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.product.is_active).to.be.false;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_active\": false\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products/{{productId}}/publish",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products", "{{productId}}", "publish"]
+        },
+        "description": "Administrator endpoint: Unpublishes product, making it invisible to public queries."
+      }
+    },
+    {
+      "name": "11. Delete or deactivate a product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Product deactivated or deleted', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products/{{productId}}?soft=true",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products", "{{productId}}"],
+          "query": [
+            {
+              "key": "soft",
+              "value": "true"
+            }
+          ]
+        },
+        "description": "Administrator endpoint: Deactivates product (soft delete) or deletes product permanently (cascading images)."
+      }
+    },
+    {
+      "name": "12. Attempt to create a product as a regular customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Administrator required error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Forbidden');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Malicious Customer Product\",\n  \"price\": 1.00,\n  \"stock\": 100\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products"]
+        },
+        "description": "Security test: Regular customer attempt to create a product is rejected with 403 Forbidden."
+      }
+    },
+    {
+      "name": "13. Attempt to modify a product's price as a regular customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Administrator required error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Forbidden');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 0.01\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products/{{productId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products", "{{productId}}"]
+        },
+        "description": "Security test: Regular customer attempt to alter product pricing is rejected with 403 Forbidden."
+      }
+    },
+    {
+      "name": "14. Submit invalid values, including negative prices and negative stock",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Validation details list negative price and stock errors', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.details).to.have.property('price');",
+              "    pm.expect(jsonData.details).to.have.property('stock');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Invalid Values Test Product\",\n  \"price\": -99.99,\n  \"stock\": -5\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products"]
+        },
+        "description": "Validation test: Negative prices and negative stock are strictly rejected with 400 Bad Request."
+      }
+    },
+    {
+      "name": "15. Upload a product image (Supabase Storage)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created or 400 if file omitted in runner', function () {",
+              "    pm.expect([200, 201, 400]).to.include(pm.response.code);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "if (pm.response.code === 201) {",
+              "    pm.expect(jsonData.data).to.have.property('public_url');",
+              "    pm.expect(jsonData.data).to.have.property('storage_path');",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "product_id",
+              "value": "{{productId}}",
+              "type": "text"
+            },
+            {
+              "key": "file",
+              "description": "Select an image file (JPEG, PNG, WebP) under 5MB",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/upload",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "upload"]
+        },
+        "description": "Administrator endpoint: Uploads product image into the product-images Supabase Storage bucket, validating size and MIME type."
+      }
+    }
+  ]
+}
+

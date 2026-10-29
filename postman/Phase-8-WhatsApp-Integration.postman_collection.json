@@ -1,0 +1,539 @@
+{
+  "info": {
+    "_postman_id": "f516dc98-439d-4392-a1f7-41804bce3e82",
+    "name": "3D Printing Store - Phase 8 WhatsApp Integration",
+    "description": "Comprehensive Postman test collection for Phase 8: WhatsApp Business Cloud API integration, cryptographic webhook verification (HMAC-SHA256), automated outbound order confirmations, idempotency deduplication, inbound reply parsing, state machine synchronization, and transaction audit trails.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. WhatsApp Webhook Challenge Verification (GET /api/webhooks/whatsapp)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns exact hub.challenge string in response body', function () {",
+              "    pm.expect(pm.response.text()).to.eql('challenge_token_abc_123');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/webhooks/whatsapp?hub.mode=subscribe&hub.challenge=challenge_token_abc_123&hub.verify_token={{whatsappVerifyToken}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "webhooks", "whatsapp"],
+          "query": [
+            { "key": "hub.mode", "value": "subscribe" },
+            { "key": "hub.challenge", "value": "challenge_token_abc_123" },
+            { "key": "hub.verify_token", "value": "{{whatsappVerifyToken}}" }
+          ]
+        },
+        "description": "Meta WhatsApp Webhook subscription verification handshake."
+      }
+    },
+    {
+      "name": "2. WhatsApp Webhook Challenge Rejected with Invalid Verify Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Error message notes invalid verification token', function () {",
+              "    pm.expect(jsonData.error).to.include('Invalid verify token');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/webhooks/whatsapp?hub.mode=subscribe&hub.challenge=challenge_token_abc_123&hub.verify_token=unauthorized_wrong_token",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "webhooks", "whatsapp"],
+          "query": [
+            { "key": "hub.mode", "value": "subscribe" },
+            { "key": "hub.challenge", "value": "challenge_token_abc_123" },
+            { "key": "hub.verify_token", "value": "unauthorized_wrong_token" }
+          ]
+        },
+        "description": "Ensures unauthorized webhook subscription requests are forbidden."
+      }
+    },
+    {
+      "name": "3. Inbound Webhook Rejected with Missing or Invalid HMAC Signature",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Error reports invalid webhook signature', function () {",
+              "    pm.expect(jsonData.error).to.include('Invalid webhook signature');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-hub-signature-256",
+            "value": "sha256=invalid_tampered_signature_hex_value"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"entry\": []\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/webhooks/whatsapp",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "webhooks", "whatsapp"]
+        },
+        "description": "Rejects inbound payloads that fail cryptographic HMAC-SHA256 validation."
+      }
+    },
+    {
+      "name": "4. Admin Triggers Outbound WhatsApp Order Confirmation Dispatch",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Confirmation message sent and logged', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.success).to.be.true;",
+              "    pm.expect(jsonData.data.provider_message_id).to.be.a('string');",
+              "    pm.environment.set('outboundProviderMsgId', jsonData.data.provider_message_id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"order_id\": \"{{orderId}}\",\n  \"message_type\": \"order_confirmation\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/whatsapp/send",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "whatsapp", "send"]
+        },
+        "description": "Dispatches order confirmation message to customer's WhatsApp."
+      }
+    },
+    {
+      "name": "5. Outbound Order Confirmation Deduplication (Idempotency Check)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Idempotency triggered: already_sent flag is true', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.already_sent).to.be.true;",
+              "    pm.expect(jsonData.data.provider_message_id).to.eql(pm.environment.get('outboundProviderMsgId'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"order_id\": \"{{orderId}}\",\n  \"message_type\": \"order_confirmation\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/whatsapp/send",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "whatsapp", "send"]
+        },
+        "description": "Verifies duplicate outbound confirmation requests for the same order are safely suppressed."
+      }
+    },
+    {
+      "name": "6. Inbound Customer Confirmation via WhatsApp (CONFIRM #{{orderNumber}})",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Webhook processed confirmation message successfully', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.results).to.be.an('array');",
+              "    pm.expect(jsonData.results[0].status).to.eql('order_confirmed');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-hub-signature-256",
+            "value": "sha256=mock_valid_signature"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [\n    {\n      \"id\": \"wh_acc_123\",\n      \"changes\": [\n        {\n          \"value\": {\n            \"messaging_product\": \"whatsapp\",\n            \"metadata\": {\n              \"display_phone_number\": \"201000000000\",\n              \"phone_number_id\": \"test_phone_id\"\n            },\n            \"messages\": [\n              {\n                \"from\": \"{{customerPhone}}\",\n                \"id\": \"wamid.inbound_confirm_001\",\n                \"timestamp\": \"1730174400\",\n                \"type\": \"text\",\n                \"text\": {\n                  \"body\": \"CONFIRM #{{orderNumber}}\"\n                }\n              }\n            ]\n          },\n          \"field\": \"messages\"\n        }\n      ]\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/webhooks/whatsapp",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "webhooks", "whatsapp"]
+        },
+        "description": "Simulates inbound customer WhatsApp confirmation reply."
+      }
+    },
+    {
+      "name": "7. Order Status Transitioned to Confirmed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Order status is confirmed with customer_confirmation_at timestamp', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.order.status).to.eql('confirmed');",
+              "    pm.expect(jsonData.data.order.customer_confirmation_at).to.not.be.null;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{orderId}}"]
+        },
+        "description": "Verifies order status updated in database following WhatsApp confirmation."
+      }
+    },
+    {
+      "name": "8. CRITICAL CHECK: Order Payment Status Remains Unchanged (Never Automatically Marked Paid)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Payment status is NOT paid (remains pending or awaiting review)', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.order.payment_status).to.not.eql('paid');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{orderId}}"]
+        },
+        "description": "CRITICAL INVARIANT: WhatsApp confirmation must NEVER mark payments as paid."
+      }
+    },
+    {
+      "name": "9. Inbound Customer Cancellation via WhatsApp (CANCEL #{{orderNumber}})",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Webhook processed cancellation message', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.results).to.be.an('array');",
+              "    pm.expect(jsonData.results[0].status).to.eql('order_cancelled');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-hub-signature-256",
+            "value": "sha256=mock_valid_signature"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [\n    {\n      \"id\": \"wh_acc_123\",\n      \"changes\": [\n        {\n          \"value\": {\n            \"messaging_product\": \"whatsapp\",\n            \"metadata\": {\n              \"display_phone_number\": \"201000000000\",\n              \"phone_number_id\": \"test_phone_id\"\n            },\n            \"messages\": [\n              {\n                \"from\": \"{{customerPhone}}\",\n                \"id\": \"wamid.inbound_cancel_002\",\n                \"timestamp\": \"1730174410\",\n                \"type\": \"text\",\n                \"text\": {\n                  \"body\": \"CANCEL #{{orderNumber}}\"\n                }\n              }\n            ]\n          },\n          \"field\": \"messages\"\n        }\n      ]\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/webhooks/whatsapp",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "webhooks", "whatsapp"]
+        },
+        "description": "Simulates inbound customer cancellation reply via WhatsApp."
+      }
+    },
+    {
+      "name": "10. Inbound Webhook Deduplication / Duplicate Suppression",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Deduplication recognizes already processed message ID', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.results[0].status).to.eql('already_processed');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-hub-signature-256",
+            "value": "sha256=mock_valid_signature"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [\n    {\n      \"id\": \"wh_acc_123\",\n      \"changes\": [\n        {\n          \"value\": {\n            \"messaging_product\": \"whatsapp\",\n            \"metadata\": {\n              \"display_phone_number\": \"201000000000\",\n              \"phone_number_id\": \"test_phone_id\"\n            },\n            \"messages\": [\n              {\n                \"from\": \"{{customerPhone}}\",\n                \"id\": \"wamid.inbound_confirm_001\",\n                \"timestamp\": \"1730174400\",\n                \"type\": \"text\",\n                \"text\": {\n                  \"body\": \"CONFIRM #{{orderNumber}}\"\n                }\n              }\n            ]\n          },\n          \"field\": \"messages\"\n        }\n      ]\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/webhooks/whatsapp",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "webhooks", "whatsapp"]
+        },
+        "description": "Verifies duplicate inbound webhooks with identical provider_message_id are safely ignored."
+      }
+    },
+    {
+      "name": "11. Inbound Ambiguous Order Handling (Multiple Orders Without Explicit Order Number)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Ambiguous reply handled safely without guessing', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(['ambiguous_orders', 'no_matching_order']).to.include(jsonData.results[0].status);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-hub-signature-256",
+            "value": "sha256=mock_valid_signature"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [\n    {\n      \"id\": \"wh_acc_123\",\n      \"changes\": [\n        {\n          \"value\": {\n            \"messaging_product\": \"whatsapp\",\n            \"metadata\": {\n              \"display_phone_number\": \"201000000000\",\n              \"phone_number_id\": \"test_phone_id\"\n            },\n            \"messages\": [\n              {\n                \"from\": \"201099999999\",\n                \"id\": \"wamid.inbound_ambiguous_003\",\n                \"timestamp\": \"1730174420\",\n                \"type\": \"text\",\n                \"text\": {\n                  \"body\": \"CONFIRM\"\n                }\n              }\n            ]\n          },\n          \"field\": \"messages\"\n        }\n      ]\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/webhooks/whatsapp",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "webhooks", "whatsapp"]
+        },
+        "description": "Tests handling when customer replies without order reference while having multiple active orders."
+      }
+    },
+    {
+      "name": "12. Admin Inspects WhatsApp Audit Log",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Audit log contains inbound and outbound message entries', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.messages).to.be.an('array');",
+              "    pm.expect(jsonData.pagination).to.have.property('total');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/whatsapp?order_id={{orderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "whatsapp"],
+          "query": [
+            { "key": "order_id", "value": "{{orderId}}" }
+          ]
+        },
+        "description": "Queries whatsapp_messages table for complete audit trail of order communications."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "adminAccessToken",
+      "value": ""
+    },
+    {
+      "key": "customerAccessToken",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "orderNumber",
+      "value": "100001"
+    },
+    {
+      "key": "customerPhone",
+      "value": "201012345678"
+    },
+    {
+      "key": "whatsappVerifyToken",
+      "value": "whatsapp_verify_token_sample"
+    },
+    {
+      "key": "outboundProviderMsgId",
+      "value": ""
+    }
+  ]
+}
+

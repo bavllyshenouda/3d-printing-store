@@ -1,0 +1,650 @@
+{
+  "info": {
+    "_postman_id": "c841fa90-501b-4d78-b452-f6719124a9e2",
+    "name": "3D Printing Store - Phase 6 Custom Prints and Quotes",
+    "description": "Comprehensive Postman test collection for Phase 6: Custom 3D-Print Requests, 3D Model/Image File Attachments, Admin Quotes, Idempotent Quote Acceptance, and Order Conversion.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Create a valid custom print request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Request created with submitted status', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.request).to.have.property('id');",
+              "    pm.expect(jsonData.data.request.status).to.eql('submitted');",
+              "    pm.environment.set('requestId', jsonData.data.request.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Custom Mechanical Gear Replacement\",\n  \"description\": \"I need a high-strength replacement gear for a vintage lathe. Needs to withstand moderate mechanical stress.\",\n  \"quantity\": 2,\n  \"preferred_material\": \"PETG\",\n  \"preferred_color\": \"Matte Black\",\n  \"customer_notes\": \"0.15mm layer height preferred\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/custom-prints",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "custom-prints"]
+        },
+        "description": "Authenticated customer submits a new custom 3D printing request in 'submitted' status."
+      }
+    },
+    {
+      "name": "2. Attempt to create a request without authentication",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Authentication required error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Unauthorized');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"Unauthenticated request attempt\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/custom-prints",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "custom-prints"]
+        },
+        "description": "Verifies that anonymous users cannot create custom print requests."
+      }
+    },
+    {
+      "name": "3. Upload an allowed STL or 3MF file",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Model file metadata recorded', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.file).to.have.property('id');",
+              "    pm.expect(jsonData.data.file.storage_path).to.include(pm.environment.get('requestId') || '');",
+              "    pm.environment.set('fileId', jsonData.data.file.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "gear-model.stl",
+              "description": "Select an STL or 3MF model file"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/custom-prints/{{requestId}}/files",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "custom-prints", "{{requestId}}", "files"]
+        },
+        "description": "Uploads an STL or 3MF model to private bucket custom-print-files under path {userId}/{requestId}/{timestamp}-{filename}."
+      }
+    },
+    {
+      "name": "4. Upload an allowed reference image (PNG/JPEG/WebP)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Image file attached successfully', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "reference-photo.png",
+              "description": "Select a reference photo (PNG, JPEG, WebP)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/custom-prints/{{requestId}}/files",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "custom-prints", "{{requestId}}", "files"]
+        },
+        "description": "Uploads an auxiliary reference image to guide the slicing and manufacturing process."
+      }
+    },
+    {
+      "name": "5. Reject an unsupported file type (.exe / .zip)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Unsupported file extension error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Unsupported file extension');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "archive.zip"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/custom-prints/{{requestId}}/files",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "custom-prints", "{{requestId}}", "files"]
+        },
+        "description": "Validates that non-3D / non-image formats are rejected."
+      }
+    },
+    {
+      "name": "6. Reject an oversized file (> 50 MB)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('File size limit error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('exceeds the 50 MB limit');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "huge-file-over-50mb.stl"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/custom-prints/{{requestId}}/files",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "custom-prints", "{{requestId}}", "files"]
+        },
+        "description": "Rejects design files exceeding 50 MB."
+      }
+    },
+    {
+      "name": "7. Attempt to access another customer's custom request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 404 Not Found', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Access denied or request not found', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('not found');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/custom-prints/{{otherUserRequestId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "custom-prints", "{{otherUserRequestId}}"]
+        },
+        "description": "Security test: Verifies that customer A cannot retrieve design files or requests submitted by customer B."
+      }
+    },
+    {
+      "name": "8. Create a quote as an administrator",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Quote created and sent with calculated total', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.quote).to.have.property('id');",
+              "    pm.expect(jsonData.data.quote.status).to.eql('sent');",
+              "    pm.expect(jsonData.data.quote.total_price).to.eql(300);",
+              "    pm.environment.set('quoteId', jsonData.data.quote.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"PETG Carbon-reinforced gear set (2 units)\",\n  \"material\": \"PETG-CF\",\n  \"color\": \"Black\",\n  \"quantity\": 2,\n  \"unit_price\": 150.00,\n  \"estimated_days\": 4,\n  \"valid_days\": 7,\n  \"status\": \"sent\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/custom-prints/{{requestId}}/quotes",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "custom-prints", "{{requestId}}", "quotes"]
+        },
+        "description": "Admin creates a formal quote with material, color, price (150 EGP/unit * 2 = 300 EGP total), and valid_until."
+      }
+    },
+    {
+      "name": "9. Attempt to create a quote as a regular customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Administrator privileges required error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Administrator');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"Customer tampering with pricing\",\n  \"quantity\": 1,\n  \"unit_price\": 1.00\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/custom-prints/{{requestId}}/quotes",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "custom-prints", "{{requestId}}", "quotes"]
+        },
+        "description": "Validates that customers cannot access quoting endpoints or dictate their own print prices."
+      }
+    },
+    {
+      "name": "10. Accept a valid quote and convert to order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created or 200 OK', function () {",
+              "    pm.expect([200, 201]).to.include(pm.response.code);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Order created with quote pricing and line item snapshot', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.have.property('order_id');",
+              "    pm.expect(jsonData.data.subtotal).to.eql(300);",
+              "    pm.environment.set('orderId', jsonData.data.order_id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"payment_method\": \"instapay\",\n  \"shipping_fee\": 50,\n  \"address\": {\n    \"first_name\": \"Mina\",\n    \"last_name\": \"Shenouda\",\n    \"phone\": \"01012345678\",\n    \"governorate\": \"Cairo\",\n    \"region\": \"Nasr City\",\n    \"street_address\": \"15 Abbas El Akkad St\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/custom-prints/{{requestId}}/quotes/{{quoteId}}/accept",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "custom-prints", "{{requestId}}", "quotes", "{{quoteId}}", "accept"]
+        },
+        "description": "Customer accepts the quote. Atomic RPC converts it into an Order in 'confirmed' status with snapshot line items."
+      }
+    },
+    {
+      "name": "11. Reject a quote as customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK or 400 Bad Request if already accepted', function () {",
+              "    pm.expect([200, 400]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"Estimated completion time is too long for my project deadline.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/custom-prints/{{requestId}}/quotes/{{quoteId}}/reject",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "custom-prints", "{{requestId}}", "quotes", "{{quoteId}}", "reject"]
+        },
+        "description": "Customer declines the terms of a quote. The quote transitions to 'rejected' and request returns to 'under_review'."
+      }
+    },
+    {
+      "name": "12. Attempt to accept an invalid or non-sent quote",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request or 404', function () {",
+              "    pm.expect([400, 404]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"payment_method\": \"cod\",\n  \"address\": {\n    \"first_name\": \"Mina\",\n    \"last_name\": \"Shenouda\",\n    \"phone\": \"01012345678\",\n    \"governorate\": \"Cairo\",\n    \"region\": \"Nasr City\",\n    \"street_address\": \"15 Abbas El Akkad St\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/custom-prints/{{requestId}}/quotes/00000000-0000-0000-0000-000000000000/accept",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "custom-prints", "{{requestId}}", "quotes", "00000000-0000-0000-0000-000000000000", "accept"]
+        },
+        "description": "Verifies that nonexistent or unapproved quotes cannot be converted into purchase orders."
+      }
+    },
+    {
+      "name": "13. Repeat quote acceptance to verify idempotency (no duplicate orders)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK (Idempotent replay)', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Returns existing order without creating a duplicate', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.order_id).to.eql(pm.environment.get('orderId'));",
+              "    pm.expect(jsonData.data.already_accepted).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"payment_method\": \"instapay\",\n  \"shipping_fee\": 50,\n  \"address\": {\n    \"first_name\": \"Mina\",\n    \"last_name\": \"Shenouda\",\n    \"phone\": \"01012345678\",\n    \"governorate\": \"Cairo\",\n    \"region\": \"Nasr City\",\n    \"street_address\": \"15 Abbas El Akkad St\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/custom-prints/{{requestId}}/quotes/{{quoteId}}/accept",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "custom-prints", "{{requestId}}", "quotes", "{{quoteId}}", "accept"]
+        },
+        "description": "Verifies idempotency: Re-submitting acceptance for an already accepted quote returns the existing order ID."
+      }
+    },
+    {
+      "name": "14. Verify resulting order integrates with Phase 5 Payment Proof workflow",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Order details verified in order management', function () {",
+              "    pm.expect(jsonData.data.order.id).to.eql(pm.environment.get('orderId'));",
+              "    pm.expect(jsonData.data.order.items[0].product_name).to.include('Custom 3D Print');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{orderId}}"]
+        },
+        "description": "Verifies that the created order seamlessly connects with Orders, Payment Proofs, and Shipping Events."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "customerAccessToken",
+      "value": ""
+    },
+    {
+      "key": "adminAccessToken",
+      "value": ""
+    },
+    {
+      "key": "requestId",
+      "value": ""
+    },
+    {
+      "key": "fileId",
+      "value": ""
+    },
+    {
+      "key": "quoteId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "otherUserRequestId",
+      "value": "00000000-0000-0000-0000-000000000099"
+    }
+  ]
+}
+

@@ -1,0 +1,607 @@
+{
+  "info": {
+    "_postman_id": "c1f7a829-87c2-4811-9a1d-2d989f5c490a",
+    "name": "3D Printing Store - Phase 3 Shopping Cart",
+    "description": "Comprehensive Postman test collection for Phase 3: Authenticated Customer Cart, Pricing Authority, Inventory Bounds, Color Validation, and RLS Isolation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "supabaseUrl",
+      "value": "https://iynlpnokyhdjdjscrvkc.supabase.co",
+      "type": "string"
+    },
+    {
+      "key": "supabaseAnonKey",
+      "value": "sb_publishable_mDB1O0jRmU44ZnsgfpBD5w_StnswKuK",
+      "type": "string"
+    },
+    {
+      "key": "customerAccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "otherCustomerAccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "unpublishedProductId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cartItemId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "otherUserId",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Retrieve an empty cart",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Cart structure returned correctly', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.have.property('items');",
+              "    pm.expect(jsonData.data).to.have.property('summary');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/cart",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart"]
+        },
+        "description": "Retrieves the authenticated customer's cart. Returns empty array if no items added."
+      }
+    },
+    {
+      "name": "2. Add a valid product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created or 200 OK', function () {",
+              "    pm.expect([200, 201]).to.include(pm.response.code);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Product added to cart with authoritative pricing', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.item).to.have.property('id');",
+              "    pm.expect(jsonData.data).to.have.property('authoritative_unit_price');",
+              "    pm.environment.set('cartItemId', jsonData.data.item.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{productId}}\",\n  \"color\": \"Emerald Green\",\n  \"quantity\": 2\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cart",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart"]
+        },
+        "description": "Adds a published product with a valid color and quantity. Auto-saves cartItemId."
+      }
+    },
+    {
+      "name": "3. Add the same product again (Duplicate Prevention & Quantity Increment)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Quantity incremented without creating duplicate row', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.message).to.eql('Cart item quantity updated');",
+              "    pm.expect(jsonData.data.item.quantity).to.be.above(2);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{productId}}\",\n  \"color\": \"Emerald Green\",\n  \"quantity\": 1\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cart",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart"]
+        },
+        "description": "Demonstrates duplicate prevention: Adding the same product and color increments the existing item quantity instead of violating UNIQUE(user_id, product_id, color)."
+      }
+    },
+    {
+      "name": "4. Update item quantity",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Quantity updated and line total recalculated', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.item.quantity).to.eql(4);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"quantity\": 4\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cart/{{cartItemId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart", "{{cartItemId}}"]
+        },
+        "description": "Updates the quantity of an existing cart item within inventory limits."
+      }
+    },
+    {
+      "name": "5. Remove an item",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Item removed successfully', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.message).to.eql('Cart item removed successfully');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/cart/{{cartItemId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart", "{{cartItemId}}"]
+        },
+        "description": "Removes a specific item from the customer's cart."
+      }
+    },
+    {
+      "name": "6a. Attempt to access another user's cart (Next.js Endpoint)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 404 Not Found', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Foreign cart item access denied and concealed', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('not found');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"quantity\": 99\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cart/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart", "00000000-0000-0000-0000-000000000000"]
+        },
+        "description": "Security test: Attempting to modify another customer's cart item ID is rejected with 404 Not Found."
+      }
+    },
+    {
+      "name": "6b. Attempt to access another user's cart (Direct Supabase RLS)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK (with 0 foreign rows)', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('PostgreSQL RLS blocks reading foreign cart items', function () {",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "    pm.expect(jsonData.length).to.eql(0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{supabaseAnonKey}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{supabaseUrl}}/rest/v1/cart_items?user_id=eq.{{otherUserId}}",
+          "host": ["{{supabaseUrl}}"],
+          "path": ["rest", "v1", "cart_items"],
+          "query": [
+            {
+              "key": "user_id",
+              "value": "eq.{{otherUserId}}"
+            }
+          ]
+        },
+        "description": "Direct Supabase REST test: RLS policy 'Customers manage own cart' (user_id = auth.uid()) silences foreign cart reads, returning empty array []."
+      }
+    },
+    {
+      "name": "7. Add a nonexistent product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 404 Not Found', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Error reports product not found', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.eql('Product not found');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"color\": \"Emerald Green\",\n  \"quantity\": 1\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cart",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart"]
+        },
+        "description": "Attempts to add a nonexistent product UUID to cart. Returns 404."
+      }
+    },
+    {
+      "name": "8. Add an unpublished product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Error indicates product is unpublished', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('unpublished');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{unpublishedProductId}}\",\n  \"color\": \"Default\",\n  \"quantity\": 1\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cart",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart"]
+        },
+        "description": "Attempts to add a deactivated/draft product to cart. Returns 400 Bad Request."
+      }
+    },
+    {
+      "name": "9. Submit zero, negative, or invalid quantities",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Validation details report quantity constraint', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.details).to.have.property('quantity');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{productId}}\",\n  \"color\": \"Emerald Green\",\n  \"quantity\": -3\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cart",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart"]
+        },
+        "description": "Validation test: Negative quantities are strictly rejected with 400 Bad Request."
+      }
+    },
+    {
+      "name": "10. Request more units than available in stock",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Inventory bound error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('exceeds available stock');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{productId}}\",\n  \"color\": \"Emerald Green\",\n  \"quantity\": 99999\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cart",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart"]
+        },
+        "description": "Inventory protection: Attempting to add more units than present in stock is rejected with 400 Bad Request."
+      }
+    },
+    {
+      "name": "11. Attempt cart operations without authentication",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Authentication required message returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Unauthorized');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/cart",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart"]
+        },
+        "description": "Sends request to cart endpoints without authentication header or cookie. Must return 401 Unauthorized."
+      }
+    },
+    {
+      "name": "12. Verify client-submitted prices cannot control pricing",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect([200, 201]).to.include(pm.response.code);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Client price of 0.01 was ignored in favor of DB price', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.authoritative_unit_price).to.be.above(1.00);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": \"{{productId}}\",\n  \"color\": \"Emerald Green\",\n  \"quantity\": 1,\n  \"price\": 0.01,\n  \"line_total\": 0.01\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/cart",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cart"]
+        },
+        "description": "Price tamper test: Submits a malicious price: 0.01. The server discards it and calculates authoritative totals directly from the database."
+      }
+    }
+  ]
+}
+

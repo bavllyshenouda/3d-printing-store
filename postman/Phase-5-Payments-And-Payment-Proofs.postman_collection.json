@@ -1,0 +1,606 @@
+{
+  "info": {
+    "_postman_id": "b735fe12-781e-4509-9134-c7188741091e",
+    "name": "3D Printing Store - Phase 5 Payments and Payment Proofs",
+    "description": "Comprehensive Postman test collection for Phase 5: Payment records, Private Storage Proof Uploads, Signed URLs, Admin Verification (Approval/Rejection), and State Synchronization.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Retrieve or initialize payment record for owned order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Payment record initialized with pending status', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.payment).to.have.property('id');",
+              "    pm.expect(jsonData.data.payment.order_id).to.eql(pm.environment.get('orderId') || jsonData.data.payment.order_id);",
+              "    pm.expect(jsonData.data.payment.status).to.eql('pending');",
+              "    pm.environment.set('paymentId', jsonData.data.payment.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{orderId}}/payment",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{orderId}}", "payment"]
+        },
+        "description": "Retrieves or initializes the payments table record matching the order total, currency, and payment method."
+      }
+    },
+    {
+      "name": "2. Attempt to access another customer's order payment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Access denied or not found (403 or 404)', function () {",
+              "    pm.expect([403, 404]).to.include(pm.response.code);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Ownership error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.match(/Access denied|Order not found/);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{otherUserOrderId}}/payment",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{otherUserOrderId}}", "payment"]
+        },
+        "description": "Security test: Verifies that customer A cannot inspect payment records belonging to customer B."
+      }
+    },
+    {
+      "name": "3. Upload a valid payment proof (PNG/JPEG/PDF)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Proof uploaded and status transitioned to awaiting_verification', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.payment_status).to.eql('awaiting_verification');",
+              "    pm.expect(jsonData.data.proof_storage_path).to.include(pm.environment.get('orderId') || '');",
+              "    pm.environment.set('proofStoragePath', jsonData.data.proof_storage_path);",
+              "});",
+              "pm.test('Uploading proof did NOT mark payment as paid', function () {",
+              "    pm.expect(jsonData.data.payment_status).to.not.eql('paid');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "sample-proof.png",
+              "description": "Select a PNG, JPEG, WebP, or PDF file under 5 MB"
+            },
+            {
+              "key": "transaction_reference",
+              "value": "INSTA-9876543210",
+              "type": "text"
+            },
+            {
+              "key": "notes",
+              "value": "Transferred via InstaPay to your store bank account",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{orderId}}/payment/proof",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{orderId}}", "payment", "proof"]
+        },
+        "description": "Uploads proof of payment to the private payment-proofs bucket under path {userId}/{orderId}/{filename} and transitions status to awaiting_verification."
+      }
+    },
+    {
+      "name": "4. Upload an unsupported file type (.exe / .txt)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Unsupported file type error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Unsupported file');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "malicious.exe"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{orderId}}/payment/proof",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{orderId}}", "payment", "proof"]
+        },
+        "description": "Validates that non-whitelisted MIME types and extensions are rejected before storage."
+      }
+    },
+    {
+      "name": "5. Upload an oversized file (> 5 MB)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('File size limit error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('exceeds the 5 MB limit');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "large-video-or-file.png"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{orderId}}/payment/proof",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{orderId}}", "payment", "proof"]
+        },
+        "description": "Rejects files larger than 5 MB (5,242,880 bytes)."
+      }
+    },
+    {
+      "name": "6. Attempt to generate preview URL for another customer's proof",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Access denied or not found (403 or 404)', function () {",
+              "    pm.expect([403, 404]).to.include(pm.response.code);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Private storage isolation enforced', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{otherUserOrderId}}/payment/proof-url",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{otherUserOrderId}}", "payment", "proof-url"]
+        },
+        "description": "Verifies that signed URLs cannot be generated by unauthorized customers."
+      }
+    },
+    {
+      "name": "7. Attempt to mark a payment as paid as a regular customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Review endpoint blocked with 401 or 403 Forbidden', function () {",
+              "    pm.expect([401, 403]).to.include(pm.response.code);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Administrator privileges required message returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Administrator');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"approve\",\n  \"notes\": \"Customer attempting to approve their own payment\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/payments/{{paymentId}}/review",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "payments", "{{paymentId}}", "review"]
+        },
+        "description": "Privilege boundary test: Non-administrators cannot invoke admin review endpoints or mark payments paid."
+      }
+    },
+    {
+      "name": "8. Approve proof as administrator (Advance to Paid and Processing)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Payment marked paid and order advanced to processing', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.payment_status).to.eql('paid');",
+              "    pm.expect(jsonData.data.order_status).to.eql('processing');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"approve\",\n  \"transaction_reference\": \"BANK-TXN-12345\",\n  \"notes\": \"InstaPay transfer verified against bank statement. Approved.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/payments/{{paymentId}}/review",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "payments", "{{paymentId}}", "review"]
+        },
+        "description": "Administrator verifies bank receipt and approves the proof. Atomic RPC sets payment status to paid, order status to processing, and logs verified_by."
+      }
+    },
+    {
+      "name": "9. Attempt to approve proof with customer credentials",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"approve\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/payments/{{paymentId}}/review",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "payments", "{{paymentId}}", "review"]
+        },
+        "description": "Validates that requireAdmin strictly checks the admins table and blocks non-admin users."
+      }
+    },
+    {
+      "name": "10. Reject payment proof as administrator (Requires rejection reason)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK or 400 if already paid', function () {",
+              "    pm.expect([200, 400]).to.include(pm.response.code);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "if (pm.response.code === 200) {",
+              "    pm.expect(jsonData.data.payment_status).to.eql('failed');",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"reject\",\n  \"notes\": \"Screenshot is blurry and does not display the transaction reference number. Please re-upload.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/payments/{{paymentId}}/review",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "payments", "{{paymentId}}", "review"]
+        },
+        "description": "Administrator rejects an illegitimate or illegible proof. Requires reason, sets status to failed, and allows customer to re-upload."
+      }
+    },
+    {
+      "name": "11. Attempt invalid or repeated review on paid payment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Repeated review error returned', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('already approved');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"approve\",\n  \"notes\": \"Attempting to re-approve an already paid payment\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/payments/{{paymentId}}/review",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "payments", "{{paymentId}}", "review"]
+        },
+        "description": "Idempotency and state check: Once approved as paid, subsequent review operations are rejected."
+      }
+    },
+    {
+      "name": "12. Verify Cash on Delivery (COD) rejects proof submission",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('COD proof submission rejected', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Cash on Delivery');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "sample-proof.png"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{codOrderId}}/payment/proof",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{codOrderId}}", "payment", "proof"]
+        },
+        "description": "Verifies business rule: COD orders do not accept proof submissions."
+      }
+    },
+    {
+      "name": "13. Verify consistency between order and payment statuses",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Order payment_status matches payment record status', function () {",
+              "    pm.expect(jsonData.data.order.payment_status).to.eql('paid');",
+              "    pm.expect(jsonData.data.order.status).to.eql('processing');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders", "{{orderId}}"]
+        },
+        "description": "Verifies that after admin approval, GET /api/orders/[id] reflects payment_status: paid and order status: processing."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "customerAccessToken",
+      "value": ""
+    },
+    {
+      "key": "adminAccessToken",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "codOrderId",
+      "value": ""
+    },
+    {
+      "key": "paymentId",
+      "value": ""
+    },
+    {
+      "key": "proofStoragePath",
+      "value": ""
+    },
+    {
+      "key": "otherUserOrderId",
+      "value": "00000000-0000-0000-0000-000000000099"
+    }
+  ]
+}
+

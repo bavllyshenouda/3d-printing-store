@@ -1,0 +1,596 @@
+{
+  "info": {
+    "_postman_id": "c841aa91-381f-4b02-8611-d1f5e2786910",
+    "name": "3D Printing Store - Phase 7 Admin Operations",
+    "description": "Comprehensive Postman test collection for Phase 7: Catalog administration, Order lifecycle management, Payment proof review, Custom quote management, and Sanitized customer profiles with strict administrative access control.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Unauthenticated access to admin endpoints rejected (HTTP 401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Error indicates authentication is required', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Authentication required');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products"]
+        },
+        "description": "Ensures requests lacking authentication credentials receive HTTP 401."
+      }
+    },
+    {
+      "name": "2. Non-admin customer access to admin endpoints rejected (HTTP 403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 403 Forbidden', function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Error indicates administrator privileges required', function () {",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Administrator privileges required');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products"]
+        },
+        "description": "Ensures normal customer accounts without admin role in public.admins receive HTTP 403."
+      }
+    },
+    {
+      "name": "3. Admin lists products including unpublished and deactivated items",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Products returned with pagination metadata', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "    pm.expect(jsonData.pagination).to.have.property('total');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products?include_inactive=true&page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products"],
+          "query": [
+            { "key": "include_inactive", "value": "true" },
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "10" }
+          ]
+        },
+        "description": "Returns full product catalog including drafts and inactive items for administrators."
+      }
+    },
+    {
+      "name": "4. Admin creates new product with stock and specifications",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Product created with draft status and stock', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.have.property('id');",
+              "    pm.expect(jsonData.data.stock_quantity).to.eql(25);",
+              "    pm.expect(jsonData.data.is_published).to.be.false;",
+              "    pm.environment.set('adminProductId', jsonData.data.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Precision Calibration Cube 20mm\",\n  \"slug\": \"precision-calibration-cube-20mm\",\n  \"description\": \"Standard 20mm calibration cube for testing dimensional accuracy and extrusion.\",\n  \"price\": 85.00,\n  \"stock_quantity\": 25,\n  \"is_published\": false,\n  \"is_active\": true,\n  \"available_colors\": [\"Black\", \"White\", \"Silver\", \"Neon Green\"],\n  \"dimensions\": {\"x\": 20, \"y\": 20, \"z\": 20, \"unit\": \"mm\"},\n  \"material\": \"PLA+\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products"]
+        },
+        "description": "Creates a new product record in draft state."
+      }
+    },
+    {
+      "name": "5. Admin updates product details and stock quantity",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Product updated with modified price and stock', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.price).to.eql(95);",
+              "    pm.expect(jsonData.data.stock_quantity).to.eql(30);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 95.00,\n  \"stock_quantity\": 30\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products/{{adminProductId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products", "{{adminProductId}}"]
+        },
+        "description": "Updates price and stock for an existing product."
+      }
+    },
+    {
+      "name": "6. Admin publishes product to make it customer-visible",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Product publication state is true', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.is_published).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_published\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products/{{adminProductId}}/publish",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products", "{{adminProductId}}", "publish"]
+        },
+        "description": "Toggles product publish status to live."
+      }
+    },
+    {
+      "name": "7. Admin attaches image metadata to product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Image metadata record added', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.have.property('id');",
+              "    pm.expect(jsonData.data.is_primary).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"image_url\": \"https://example-bucket.supabase.co/storage/v1/object/public/product-images/cube-front.jpg\",\n  \"is_primary\": true,\n  \"display_order\": 0,\n  \"alt_text\": \"Calibration Cube Isometric View\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/products/{{adminProductId}}/images",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "products", "{{adminProductId}}", "images"]
+        },
+        "description": "Attaches an image reference to the product."
+      }
+    },
+    {
+      "name": "8. Admin creates a new category",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 Created or 200 OK', function () {",
+              "    pm.expect([200, 201]).to.include(pm.response.code);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Category created with slug', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.have.property('id');",
+              "    pm.environment.set('adminCategoryId', jsonData.data.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Calibration & Test Models\",\n  \"slug\": \"calibration-test-models\",\n  \"description\": \"Dimensional test prints, tolerance gauges, and benchy models.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/categories",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "categories"]
+        },
+        "description": "Creates a new category for products."
+      }
+    },
+    {
+      "name": "9. Admin lists orders with pagination and filters",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Orders returned with items and customer snapshots', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "    pm.expect(jsonData.pagination).to.have.property('total');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/orders?page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "orders"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "10" }
+          ]
+        },
+        "description": "Lists store orders across all customers with administrative details."
+      }
+    },
+    {
+      "name": "10. Admin updates order status and logs shipping event",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Order status transitioned to processing', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.status).to.eql('processing');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"processing\",\n  \"notes\": \"Models sliced and sent to Bambu Lab X1-Carbon print farm.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/orders/{{orderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "orders", "{{orderId}}"]
+        },
+        "description": "Transitions order through valid state machine path and logs a shipping/audit event."
+      }
+    },
+    {
+      "name": "11. Admin lists payments awaiting review and generates signed proof preview",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Pending payment proofs include signed download URLs', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "    if (jsonData.data.length > 0) {",
+              "        pm.expect(jsonData.data[0]).to.have.property('proof_signed_url');",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/payments?status=awaiting_review",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "payments"],
+          "query": [
+            { "key": "status", "value": "awaiting_review" }
+          ]
+        },
+        "description": "Retrieves offline payment proofs with secure time-limited signed URLs."
+      }
+    },
+    {
+      "name": "12. Admin reviews and approves payment proof",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Payment status approved and order synchronized', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.status).to.eql('approved');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"approve\",\n  \"notes\": \"InstaPay transfer reference matches bank statement.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/payments/{{paymentId}}/review",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "payments", "{{paymentId}}", "review"]
+        },
+        "description": "Approves customer payment proof, marking order payment_status as paid."
+      }
+    },
+    {
+      "name": "13. Admin queries sanitized customer profiles without exposing credentials",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test('Customer list contains sanitized profiles and order aggregates', function () {",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "    if (jsonData.data.length > 0) {",
+              "        var customer = jsonData.data[0];",
+              "        pm.expect(customer).to.have.property('id');",
+              "        pm.expect(customer).to.have.property('email');",
+              "        pm.expect(customer).to.have.property('order_count');",
+              "        pm.expect(customer).to.have.property('total_spent');",
+              "        pm.expect(customer).to.not.have.property('encrypted_password');",
+              "        pm.expect(customer).to.not.have.property('password_hash');",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminAccessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/customers?page=1&limit=20",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "customers"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "20" }
+          ]
+        },
+        "description": "Lists customer accounts with purchase metrics while strictly protecting auth secrets."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "customerAccessToken",
+      "value": ""
+    },
+    {
+      "key": "adminAccessToken",
+      "value": ""
+    },
+    {
+      "key": "adminProductId",
+      "value": ""
+    },
+    {
+      "key": "adminCategoryId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "paymentId",
+      "value": ""
+    }
+  ]
+}
+
