@@ -16,6 +16,7 @@ import {
   ChevronDown,
   MapPin,
   UploadCloud,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +47,7 @@ export function Navbar({
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const pathname = usePathname();
   const { t, isRTL } = useTranslation();
-  const { user: authUser, profile, logout, isAuthenticated } = useAuth();
+  const { user: authUser, profile, logout, isAuthenticated, isAdmin } = useAuth();
   const { summary, openDrawer } = useCart();
 
   const currentUser = authUser || propUser;
@@ -148,6 +149,10 @@ export function Navbar({
     }, 0);
     return () => clearTimeout(timer);
   }, [pathname]);
+
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full">
@@ -311,6 +316,17 @@ export function Navbar({
                         </p>
                       </div>
 
+                      {isAdmin && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#FF6B35] bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors mb-1"
+                        >
+                          <ShieldCheck className="size-4 text-[#FF6B35]" />
+                          <span>{t("admin.adminDashboard")}</span>
+                        </Link>
+                      )}
+
                       <Link
                         href="/profile"
                         onClick={() => setUserMenuOpen(false)}
@@ -428,6 +444,17 @@ export function Navbar({
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="p-2 rounded-xl bg-[#FF6B35]/20 text-[#FF6B35] hover:bg-[#FF6B35]/30 transition-colors"
+                      aria-label="Admin Dashboard"
+                      title="Admin Dashboard"
+                    >
+                      <ShieldCheck className="size-4" />
+                    </Link>
+                  )}
                   <Link
                     href="/profile"
                     onClick={() => setMobileMenuOpen(false)}

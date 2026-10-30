@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Layers,
   ArrowRight,
@@ -19,9 +20,14 @@ import { toast } from "@/components/ui/toast";
 import { useTranslation } from "@/lib/i18n/context";
 
 export function Footer() {
+  const pathname = usePathname();
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const { t } = useTranslation();
+
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();

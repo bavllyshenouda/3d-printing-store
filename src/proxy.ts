@@ -44,12 +44,26 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/orders") ||
     pathname.startsWith("/custom-prints/new") ||
     pathname.startsWith("/custom-prints/my-requests") ||
-    (pathname.startsWith("/custom-prints/") && pathname !== "/custom-prints");
+    (pathname.startsWith("/custom-prints/") && pathname !== "/custom-prints") ||
+    pathname.startsWith("/admin");
 
   if (isProtectedRoute && !user) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("redirect", pathname + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Admin authorization guard: verify existence in admins table
+  if (pathname.startsWith("/admin") && user) {
+    const { data: adminRecord } = await supabase
+      .from("admins")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!adminRecord) {
+      return NextResponse.redirect(new URL("/profile", request.url));
+    }
   }
 
   // 2. Auth routes: redirect already authenticated users to profile
