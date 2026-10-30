@@ -1,7 +1,10 @@
+"use client";
+
 import React from "react";
 import { AlertCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/context";
 
 export interface ErrorStateProps {
   title?: string;
@@ -14,14 +17,20 @@ export interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = "Something went wrong",
-  message = "An unexpected error occurred while loading this section. Please try again or contact support if the issue persists.",
+  title,
+  message,
   errorCode,
   onRetry,
-  retryLabel = "Try Again",
+  retryLabel,
   secondaryAction,
   className,
 }: ErrorStateProps) {
+  const { t } = useTranslation();
+
+  const displayTitle = title || t("common.somethingWentWrong");
+  const displayMessage = message || t("common.tryAgainLater");
+  const displayRetryLabel = retryLabel || t("common.retry");
+
   return (
     <div
       role="alert"
@@ -39,16 +48,16 @@ export function ErrorState({
 
       {errorCode && (
         <span className="mb-2 font-mono text-xs font-semibold uppercase tracking-wider text-red-500/80">
-          Error {errorCode}
+          {t("common.error")} {errorCode}
         </span>
       )}
 
       <h3 className="font-heading text-lg sm:text-xl font-bold tracking-tight text-foreground">
-        {title}
+        {displayTitle}
       </h3>
 
       <p className="mt-1.5 max-w-sm text-sm text-muted-foreground leading-relaxed">
-        {message}
+        {displayMessage}
       </p>
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -57,9 +66,9 @@ export function ErrorState({
             variant="default"
             size="sm"
             onClick={onRetry}
-            iconLeft={<RotateCcw className="size-4" />}
+            iconLeft={<RotateCcw className="size-4 rtl:rotate-180" />}
           >
-            {retryLabel}
+            {displayRetryLabel}
           </Button>
         )}
         {secondaryAction}
@@ -67,4 +76,3 @@ export function ErrorState({
     </div>
   );
 }
-

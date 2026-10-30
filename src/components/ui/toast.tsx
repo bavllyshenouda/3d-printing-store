@@ -100,7 +100,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
       <div
-        className="fixed bottom-4 right-4 z-50 flex max-w-md w-full flex-col gap-2.5 pointer-events-none px-4 sm:px-0"
+        className="fixed bottom-4 end-4 z-50 flex max-w-md w-full flex-col gap-2.5 pointer-events-none px-4 sm:px-0"
         aria-live="polite"
         role="region"
         aria-label="Notifications"
@@ -110,34 +110,34 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={item.id}
             role={item.type === "error" ? "alert" : "status"}
             className={cn(
-              "pointer-events-auto flex items-start gap-3 rounded-xl border p-4 shadow-lg backdrop-blur-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-3",
+              "pointer-events-auto flex items-start gap-3 rounded-2xl border p-4 shadow-xl backdrop-blur-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-3",
               item.type === "success" &&
-                "bg-[#111318]/95 border-emerald-500/30 text-white shadow-emerald-500/10",
+                "bg-white/95 dark:bg-[#1A1D24]/95 border-emerald-500/30 text-foreground dark:text-white shadow-emerald-500/10",
               item.type === "error" &&
-                "bg-[#111318]/95 border-red-500/30 text-white shadow-red-500/10",
+                "bg-white/95 dark:bg-[#1A1D24]/95 border-red-500/30 text-foreground dark:text-white shadow-red-500/10",
               item.type === "warning" &&
-                "bg-[#111318]/95 border-amber-500/30 text-white shadow-amber-500/10",
+                "bg-white/95 dark:bg-[#1A1D24]/95 border-amber-500/30 text-foreground dark:text-white shadow-amber-500/10",
               item.type === "info" &&
-                "bg-[#111318]/95 border-[#FF6B35]/30 text-white shadow-[#FF6B35]/10"
+                "bg-white/95 dark:bg-[#1A1D24]/95 border-[#FF6B35]/30 text-foreground dark:text-white shadow-[#FF6B35]/10"
             )}
           >
             <div className="shrink-0 mt-0.5">
-              {item.type === "success" && <CheckCircle2 className="size-5 text-emerald-400" />}
-              {item.type === "error" && <AlertCircle className="size-5 text-red-400" />}
-              {item.type === "warning" && <AlertTriangle className="size-5 text-amber-400" />}
+              {item.type === "success" && <CheckCircle2 className="size-5 text-emerald-500" />}
+              {item.type === "error" && <AlertCircle className="size-5 text-red-500" />}
+              {item.type === "warning" && <AlertTriangle className="size-5 text-amber-500" />}
               {item.type === "info" && <Info className="size-5 text-[#FF6B35]" />}
             </div>
 
             <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold leading-tight">{item.title}</p>
               {item.description && (
-                <p className="text-xs text-gray-400 leading-normal">{item.description}</p>
+                <p className="text-xs text-muted-foreground leading-normal">{item.description}</p>
               )}
             </div>
 
             <button
               onClick={() => removeToast(item.id)}
-              className="shrink-0 rounded-lg p-1 text-gray-400 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
+              className="shrink-0 rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
               aria-label="Dismiss notification"
             >
               <X className="size-4" />

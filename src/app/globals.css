@@ -2,12 +2,13 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: var(--font-sans), "Inter", system-ui, sans-serif;
-  --font-heading: var(--font-heading), "Space Grotesk", system-ui, sans-serif;
-  --font-mono: var(--font-mono), "JetBrains Mono", monospace;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-cairo: "Cairo", "Segoe UI", Tahoma, Arial, sans-serif;
 
   --color-charcoal: #111318;
   --color-charcoal-elevated: #1a1d24;
@@ -62,14 +63,15 @@
   --secondary: #111318;
   --secondary-foreground: #f8f9fa;
   --muted: #f1f3f5;
-  --muted-foreground: #6b7280;
+  --muted-foreground: #5a6270;
   --accent: #fff1eb;
   --accent-foreground: #ff6b35;
   --destructive: #ef4444;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
+  --border: #e2e5e9;
+  --input: #e2e5e9;
   --ring: #ff6b35;
   --radius: 0.875rem;
+  color-scheme: light;
 }
 
 .dark {
@@ -91,6 +93,7 @@
   --border: #2a2e39;
   --input: #2a2e39;
   --ring: #ff6b35;
+  color-scheme: dark;
 }
 
 @layer base {
@@ -109,6 +112,20 @@
     font-family: var(--font-heading);
     letter-spacing: -0.025em;
   }
+}
+
+/* RTL Typography & Layout Overrides */
+[dir="rtl"], [dir="rtl"] body {
+  font-family: var(--font-cairo), system-ui, sans-serif;
+}
+
+[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, [dir="rtl"] h4, [dir="rtl"] h5, [dir="rtl"] h6, [dir="rtl"] .font-heading {
+  font-family: var(--font-cairo), system-ui, sans-serif;
+  letter-spacing: normal;
+}
+
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
 }
 
 /* Custom Studio Aesthetics */
@@ -136,16 +153,24 @@
   box-shadow: 0 4px 20px -2px rgba(17, 19, 24, 0.06), 0 2px 6px -1px rgba(17, 19, 24, 0.04);
 }
 
+.dark .shadow-soft {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -1px rgba(0, 0, 0, 0.15);
+}
+
 .shadow-card-hover {
   box-shadow: 0 12px 30px -4px rgba(17, 19, 24, 0.1), 0 4px 10px -2px rgba(17, 19, 24, 0.04);
+}
+
+.dark .shadow-card-hover {
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.35), 0 4px 10px -2px rgba(0, 0, 0, 0.2);
 }
 
 /* 3D Print Studio Grid Background Pattern */
 .bg-studio-grid {
   background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(17, 19, 24, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(17, 19, 24, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, rgba(17, 19, 24, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(17, 19, 24, 0.05) 1px, transparent 1px);
 }
 
 .dark .bg-studio-grid {
@@ -160,8 +185,8 @@
     180deg,
     transparent,
     transparent 3px,
-    rgba(255, 107, 53, 0.03) 3px,
-    rgba(255, 107, 53, 0.03) 4px
+    rgba(255, 107, 53, 0.04) 3px,
+    rgba(255, 107, 53, 0.04) 4px
   );
 }
 

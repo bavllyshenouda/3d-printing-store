@@ -7,49 +7,48 @@ import {
   SlidersHorizontal,
   Truck,
   ArrowRight,
-  CheckCircle2,
   Phone,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
+import { useTranslation } from "@/lib/i18n/context";
 
 export function HowItWorks() {
+  const { t } = useTranslation();
+
   const steps = [
     {
-      step: "01",
-      title: "Choose or Upload",
-      subtitle: "Catalog or Custom CAD",
-      description:
-        "Select an engineered model from our catalog, or upload your own 3D file in STL, 3MF, STEP, or OBJ format.",
+      step: t("howItWorks.step1Num"),
+      title: t("howItWorks.step1Title"),
+      subtitle: t("howItWorks.step1Subtitle"),
+      description: t("howItWorks.step1Desc"),
       icon: <UploadCloud className="size-6 text-[#FF6B35]" />,
       action: {
-        label: "Upload 3D File",
+        label: t("howItWorks.step1Cta"),
         href: "/custom-prints",
       },
     },
     {
-      step: "02",
-      title: "Configure & Order",
-      subtitle: "Materials & Tolerances",
-      description:
-        "Pick your polymer (PETG-CF, Tough PLA, ABS, Resin), select infill density, and checkout securely via COD, InstaPay, or Vodafone Cash.",
+      step: t("howItWorks.step2Num"),
+      title: t("howItWorks.step2Title"),
+      subtitle: t("howItWorks.step2Subtitle"),
+      description: t("howItWorks.step2Desc"),
       icon: <SlidersHorizontal className="size-6 text-[#FF6B35]" />,
       action: {
-        label: "View Materials",
+        label: t("howItWorks.step2Cta"),
         href: "/materials",
       },
     },
     {
-      step: "03",
-      title: "Print & Doorstep Delivery",
-      subtitle: "24-48h Fast Turnaround",
-      description:
-        "Our automated print farm slices, prints, and anneals your part. Receive WhatsApp photo updates and express doorstep delivery.",
+      step: t("howItWorks.step3Num"),
+      title: t("howItWorks.step3Title"),
+      subtitle: t("howItWorks.step3Subtitle"),
+      description: t("howItWorks.step3Desc"),
       icon: <Truck className="size-6 text-[#FF6B35]" />,
       action: {
-        label: "Track Existing Order",
+        label: t("howItWorks.step3Cta"),
         href: "/orders",
       },
     },
@@ -61,13 +60,13 @@ export function HowItWorks() {
         {/* Section Header */}
         <div className="flex flex-col items-center text-center max-w-2xl mx-auto mb-16">
           <Badge variant="electric" size="sm" className="mb-2">
-            Seamless Workflow
+            {t("howItWorks.badge")}
           </Badge>
           <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            How Precision 3D Printing Works
+            {t("howItWorks.title")}
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground mt-2 leading-relaxed">
-            From raw CAD geometry to physically tested functional hardware in 3 simple steps.
+            {t("howItWorks.description")}
           </p>
         </div>
 
@@ -75,11 +74,11 @@ export function HowItWorks() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
           {/* Connector Line (visible on desktop) */}
           <div
-            className="hidden md:block absolute top-1/2 left-[15%] right-[15%] -translate-y-12 h-0.5 bg-gradient-to-r from-[#FF6B35]/20 via-[#FF6B35]/50 to-[#FF6B35]/20 -z-0"
+            className="hidden md:block absolute top-1/2 start-[15%] end-[15%] -translate-y-12 h-0.5 bg-gradient-to-r from-[#FF6B35]/20 via-[#FF6B35]/50 to-[#FF6B35]/20 -z-0"
             aria-hidden="true"
           />
 
-          {steps.map((item, idx) => (
+          {steps.map((item) => (
             <Card
               key={item.step}
               variant="interactive"
@@ -114,7 +113,7 @@ export function HowItWorks() {
                 <Button variant="ghost" size="sm" asChild className="p-0 h-auto text-xs text-[#FF6B35] hover:text-[#E85A26]">
                   <Link href={item.action.href} className="flex items-center gap-1 font-semibold">
                     <span>{item.action.label}</span>
-                    <ArrowRight className="size-3.5" />
+                    <ArrowRight className="size-3.5 rtl:rotate-180" />
                   </Link>
                 </Button>
               </div>
@@ -130,20 +129,19 @@ export function HowItWorks() {
             </div>
             <div>
               <h4 className="font-heading text-sm font-bold text-foreground">
-                Automated WhatsApp Progress Updates
+                {t("howItWorks.whatsappAlertTitle")}
               </h4>
               <p className="text-xs text-muted-foreground mt-0.5">
-                We notify you on WhatsApp when slicing starts, when the print bed finishes, and when your package ships.
+                {t("howItWorks.whatsappAlertDesc")}
               </p>
             </div>
           </div>
 
           <Badge variant="success" size="sm" dot pulse className="shrink-0">
-            Live Automated Alerts
+            {t("howItWorks.whatsappBadge")}
           </Badge>
         </div>
       </Container>
     </section>
   );
 }
-

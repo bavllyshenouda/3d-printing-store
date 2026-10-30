@@ -54,7 +54,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         >
           {iconLeft && (
-            <div className="pl-3.5 pr-1 text-muted-foreground shrink-0 pointer-events-none">
+            <div className="ps-3.5 pe-1 text-muted-foreground shrink-0 pointer-events-none">
               {iconLeft}
             </div>
           )}
@@ -67,15 +67,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             required={required}
             className={cn(
               "w-full bg-transparent px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none disabled:cursor-not-allowed",
-              iconLeft && "pl-1.5",
-              iconRight && "pr-1.5",
+              iconLeft && "ps-1.5",
+              iconRight && "pe-1.5",
               className
             )}
             {...props}
           />
 
           {iconRight && (
-            <div className="pr-3.5 pl-1 text-muted-foreground shrink-0">
+            <div className="pe-3.5 ps-1 text-muted-foreground shrink-0">
               {iconRight}
             </div>
           )}

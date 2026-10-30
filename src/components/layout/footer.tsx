@@ -16,19 +16,21 @@ import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
+import { useTranslation } from "@/lib/i18n/context";
 
 export function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const { t } = useTranslation();
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes("@")) {
-      toast.error("Please enter a valid email address");
+      toast.error(t("common.error"), "Please enter a valid email address");
       return;
     }
     setSubscribed(true);
-    toast.success("Subscribed!", "You're now on our studio newsletter list.");
+    toast.success(t("footer.subscribed"), t("footer.newsletterDesc"));
   };
 
   return (
@@ -43,10 +45,10 @@ export function Footer() {
               </div>
               <div>
                 <h4 className="font-heading text-sm font-bold text-white">
-                  Rapid 24-48h Dispatch
+                  {t("footer.val1Title")}
                 </h4>
                 <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                  Industrial Bambu X1C & Voron print farm running 24/7 for zero downtime.
+                  {t("footer.val1Desc")}
                 </p>
               </div>
             </div>
@@ -57,10 +59,10 @@ export function Footer() {
               </div>
               <div>
                 <h4 className="font-heading text-sm font-bold text-white">
-                  Micron-Level Dimensional Accuracy
+                  {t("footer.val2Title")}
                 </h4>
                 <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                  Calibrated to ±0.1mm tolerances for flawless mechanical fitment.
+                  {t("footer.val2Desc")}
                 </p>
               </div>
             </div>
@@ -71,10 +73,10 @@ export function Footer() {
               </div>
               <div>
                 <h4 className="font-heading text-sm font-bold text-white">
-                  Engineering Grade Polymers
+                  {t("footer.val3Title")}
                 </h4>
                 <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                  PETG-Carbon Fiber, Tough PLA+, High-Temp ABS, and 8K High-Resin.
+                  {t("footer.val3Desc")}
                 </p>
               </div>
             </div>
@@ -85,10 +87,10 @@ export function Footer() {
               </div>
               <div>
                 <h4 className="font-heading text-sm font-bold text-white">
-                  WhatsApp Slicing Support
+                  {t("footer.val4Title")}
                 </h4>
                 <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                  Direct engineering support for slicing orientation and infill advice.
+                  {t("footer.val4Desc")}
                 </p>
               </div>
             </div>
@@ -111,23 +113,23 @@ export function Footer() {
                     PRINT<span className="text-[#FF6B35]">STUDIO</span>
                   </span>
                   <span className="text-[10px] font-mono tracking-widest text-gray-400 uppercase">
-                    Additive Manufacturing Lab
+                    {t("common.brandTagline")}
                   </span>
                 </div>
               </Link>
 
               <p className="text-sm text-gray-400 leading-relaxed max-w-sm">
-                Next-generation 3D printing studio based in Cairo, Egypt. From rapid engineering prototypes to customized on-demand production batches.
+                {t("footer.about")}
               </p>
 
               <div className="pt-2 space-y-2 text-xs text-gray-400">
                 <p className="flex items-center gap-2">
-                  <MapPin className="size-3.5 text-[#FF6B35]" />
-                  <span>Cairo, Egypt · Industrial District</span>
+                  <MapPin className="size-3.5 text-[#FF6B35] shrink-0" />
+                  <span>{t("footer.location")}</span>
                 </p>
                 <p className="flex items-center gap-2">
-                  <Mail className="size-3.5 text-[#FF6B35]" />
-                  <span>support@printstudio3d.com</span>
+                  <Mail className="size-3.5 text-[#FF6B35] shrink-0" />
+                  <span>{t("footer.email")}</span>
                 </p>
               </div>
             </div>
@@ -135,32 +137,32 @@ export function Footer() {
             {/* Shop Navigation */}
             <div className="space-y-3">
               <h4 className="font-heading text-xs font-bold uppercase tracking-wider text-white">
-                Catalog & Store
+                {t("footer.catalogCol")}
               </h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
                   <Link href="/products" className="hover:text-white transition-colors">
-                    All Products
+                    {t("footer.allProducts")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/products?category=mechanical" className="hover:text-white transition-colors">
-                    Gears & Mechanical
+                    {t("footer.gearsMechanical")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/products?category=desk-organization" className="hover:text-white transition-colors">
-                    Studio Desk Gear
+                    {t("footer.studioDeskGear")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/products?category=drone-rc" className="hover:text-white transition-colors">
-                    Drones & RC Spares
+                    {t("footer.dronesRc")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/products?category=cosplay" className="hover:text-white transition-colors">
-                    Cosplay & Replicas
+                    {t("footer.cosplay")}
                   </Link>
                 </li>
               </ul>
@@ -169,32 +171,32 @@ export function Footer() {
             {/* Custom Manufacturing */}
             <div className="space-y-3">
               <h4 className="font-heading text-xs font-bold uppercase tracking-wider text-white">
-                Custom Printing
+                {t("footer.customCol")}
               </h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
                   <Link href="/custom-prints" className="hover:text-white transition-colors text-[#FF6B35]">
-                    Request a Quote
+                    {t("footer.requestQuote")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/materials" className="hover:text-white transition-colors">
-                    Filament Properties
+                    {t("footer.filamentProperties")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/custom-prints/guidelines" className="hover:text-white transition-colors">
-                    STL & 3MF Guidelines
+                    {t("footer.guidelines")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/custom-prints/slicing" className="hover:text-white transition-colors">
-                    Infill & Shell Options
+                    {t("footer.slicingOptions")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/custom-prints/bulk" className="hover:text-white transition-colors">
-                    Batch Manufacturing
+                    {t("footer.batchManufacturing")}
                   </Link>
                 </li>
               </ul>
@@ -203,32 +205,32 @@ export function Footer() {
             {/* Orders & Help */}
             <div className="space-y-3">
               <h4 className="font-heading text-xs font-bold uppercase tracking-wider text-white">
-                Orders & Help
+                {t("footer.ordersCol")}
               </h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
                   <Link href="/orders" className="hover:text-white transition-colors">
-                    Track Your Order
+                    {t("footer.trackOrder")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/payments/guide" className="hover:text-white transition-colors">
-                    InstaPay & Vodafone Cash
+                    {t("footer.paymentsGuide")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/shipping" className="hover:text-white transition-colors">
-                    Shipping & Delivery
+                    {t("footer.shipping")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/faq" className="hover:text-white transition-colors">
-                    Frequently Asked Questions
+                    {t("footer.faq")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/terms" className="hover:text-white transition-colors">
-                    Terms & Quality Guarantee
+                    {t("footer.terms")}
                   </Link>
                 </li>
               </ul>
@@ -237,22 +239,22 @@ export function Footer() {
             {/* Newsletter Column */}
             <div className="space-y-3">
               <h4 className="font-heading text-xs font-bold uppercase tracking-wider text-white">
-                Studio Dispatch
+                {t("footer.newsletterCol")}
               </h4>
               <p className="text-xs text-gray-400 leading-relaxed">
-                Receive alerts on limited engineering material drops, test models, and maker discounts.
+                {t("footer.newsletterDesc")}
               </p>
 
               {subscribed ? (
                 <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 text-xs text-emerald-400">
                   <Check className="size-4 shrink-0" />
-                  <span>Subscribed to Studio Dispatch!</span>
+                  <span>{t("footer.subscribed")}</span>
                 </div>
               ) : (
                 <form onSubmit={handleSubscribe} className="space-y-2">
                   <Input
                     type="email"
-                    placeholder="engineer@studio.com"
+                    placeholder={t("footer.newsletterPlaceholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-xs py-2"
@@ -262,9 +264,9 @@ export function Footer() {
                     variant="default"
                     size="sm"
                     className="w-full text-xs justify-center"
-                    iconRight={<ArrowRight className="size-3" />}
+                    iconRight={<ArrowRight className="size-3 rtl:rotate-180" />}
                   >
-                    Subscribe
+                    {t("footer.subscribe")}
                   </Button>
                 </form>
               )}
@@ -278,26 +280,26 @@ export function Footer() {
         <Container size="xl" className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
             <span className="font-mono">
-              © {new Date().getFullYear()} PRINT STUDIO 3D. All rights reserved.
+              © {new Date().getFullYear()} {t("common.brandName")}. {t("footer.rights")}
             </span>
             <span className="hidden sm:inline">•</span>
             <span className="flex items-center gap-1.5 text-emerald-400 font-mono text-[11px]">
               <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Print Farm Telemetry: 100% Operational
+              {t("footer.farmTelemetry")}
             </span>
           </div>
 
           {/* Payment Method Badges */}
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-gray-500 mr-1">Accepted:</span>
+            <span className="text-[11px] text-gray-500 mr-1">{t("footer.accepted")}</span>
             <span className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] font-mono border border-white/10">
-              Cash on Delivery
+              {t("footer.cod")}
             </span>
             <span className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] font-mono border border-white/10 text-pink-400">
-              InstaPay
+              {t("footer.instapay")}
             </span>
             <span className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] font-mono border border-white/10 text-red-400">
-              Vodafone Cash
+              {t("footer.vodafone")}
             </span>
           </div>
         </Container>
@@ -305,4 +307,3 @@ export function Footer() {
     </footer>
   );
 }
-

@@ -12,40 +12,55 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Container } from "@/components/layout/container";
 import { Grid } from "@/components/layout/grid";
+import { useTranslation } from "@/lib/i18n/context";
 
 export function WhyChooseUs() {
+  const { t } = useTranslation();
+
   const pillars = [
     {
-      title: "Industrial Print Quality",
-      highlight: "Flawless Layer Adhesion",
-      description:
-        "High-temp direct-drive extruders, enclosed heated chambers, and calibrated print profiles prevent warping and structural weak spots.",
+      title: t("whyUs.pillar1Title"),
+      highlight: t("whyUs.pillar1Highlight"),
+      description: t("whyUs.pillar1Desc"),
       icon: <ShieldCheck className="size-6 text-[#FF6B35]" />,
-      specs: ["Dual-gear direct drive", "Nozzle temps up to 300°C", "Moisture-sealed filament"],
+      specs: [
+        t("whyUs.pillar1Spec1"),
+        t("whyUs.pillar1Spec2"),
+        t("whyUs.pillar1Spec3"),
+      ],
     },
     {
-      title: "Micron-Level Precision",
-      highlight: "±0.08mm Tolerances",
-      description:
-        "Active vibration compensation (input shaping) and multi-point bed mesh leveling ensure tight mechanical tolerances for snap-fit assemblies.",
+      title: t("whyUs.pillar2Title"),
+      highlight: t("whyUs.pillar2Highlight"),
+      description: t("whyUs.pillar2Desc"),
       icon: <Maximize2 className="size-6 text-[#FF6B35]" />,
-      specs: ["High-speed input shaping", "Automated bed leveling", "Dimensional check guarantee"],
+      specs: [
+        t("whyUs.pillar2Spec1"),
+        t("whyUs.pillar2Spec2"),
+        t("whyUs.pillar2Spec3"),
+      ],
     },
     {
-      title: "Extensive Customization",
-      highlight: "Multi-Material & Infill",
-      description:
-        "Choose from lightweight decorative PLA+ to carbon fiber-infused PETG, heat-resistant ABS, flexible TPU 95A, and 8K SLA precision resin.",
+      title: t("whyUs.pillar3Title"),
+      highlight: t("whyUs.pillar3Highlight"),
+      description: t("whyUs.pillar3Desc"),
       icon: <SlidersHorizontal className="size-6 text-[#FF6B35]" />,
-      specs: ["Gyroid, Honeycomb & Grid infill", "12+ technical polymers", "Multi-color capabilities"],
+      specs: [
+        t("whyUs.pillar3Spec1"),
+        t("whyUs.pillar3Spec2"),
+        t("whyUs.pillar3Spec3"),
+      ],
     },
     {
-      title: "Dedicated Support",
-      highlight: "Direct Slicing Advice",
-      description:
-        "Talk directly with hardware and slicing engineers over WhatsApp. Get immediate advice on model orientation, wall count, and material selection.",
+      title: t("whyUs.pillar4Title"),
+      highlight: t("whyUs.pillar4Highlight"),
+      description: t("whyUs.pillar4Desc"),
       icon: <Headphones className="size-6 text-[#FF6B35]" />,
-      specs: ["Instant WhatsApp assistance", "Pre-print slicing review", "Quick turnaround response"],
+      specs: [
+        t("whyUs.pillar4Spec1"),
+        t("whyUs.pillar4Spec2"),
+        t("whyUs.pillar4Spec3"),
+      ],
     },
   ];
 
@@ -55,13 +70,13 @@ export function WhyChooseUs() {
         {/* Section Header */}
         <div className="flex flex-col items-center text-center max-w-2xl mx-auto mb-16">
           <Badge variant="electric" size="sm" className="mb-2">
-            Engineering Standard
+            {t("whyUs.badge")}
           </Badge>
           <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            Why Hardware Engineers Choose Print Studio
+            {t("whyUs.title")}
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground mt-2 leading-relaxed">
-            We don&apos;t just print models — we engineer additive solutions with strict mechanical tolerances and production reliability.
+            {t("whyUs.description")}
           </p>
         </div>
 
@@ -107,4 +122,3 @@ export function WhyChooseUs() {
     </section>
   );
 }
-

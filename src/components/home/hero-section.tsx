@@ -14,8 +14,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/layout/container";
+import { useTranslation } from "@/lib/i18n/context";
 
 export function HeroSection() {
+  const { t } = useTranslation();
+
   return (
     <section className="relative overflow-hidden pt-8 pb-16 sm:pt-16 sm:pb-24 border-b border-border/60 bg-studio-grid">
       {/* Background Radial Glow */}
@@ -26,25 +29,25 @@ export function HeroSection() {
 
       <Container size="xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          {/* Left Column: Headlines & CTAs */}
+          {/* Left/Start Column: Headlines & CTAs */}
           <div className="lg:col-span-7 flex flex-col items-start gap-6">
             {/* Live Telemetry Pill */}
             <div className="flex items-center gap-2 rounded-full border border-border/80 bg-white/80 dark:bg-[#1A1D24]/80 px-3.5 py-1.5 backdrop-blur-md shadow-sm">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
               <span className="font-mono text-xs font-medium text-foreground">
-                Print Farm Online · 24h Prototyping Turnaround
+                {t("hero.pillStatus")}
               </span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground leading-[1.08]">
-              From Digital CAD to{" "}
-              <span className="text-[#FF6B35]">Physical Precision.</span>
+            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground leading-[1.12]">
+              {t("hero.titleLine1")}{" "}
+              <span className="text-[#FF6B35]">{t("hero.titleHighlight")}</span>
             </h1>
 
             {/* Supporting Description */}
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl">
-              Transform your 3D models into production-grade functional prototypes, mechanical parts, and custom assemblies. Industrial multi-material FDM & 8K SLA resin printing delivered across Egypt.
+              {t("hero.description")}
             </p>
 
             {/* Dual CTAs */}
@@ -52,11 +55,11 @@ export function HeroSection() {
               <Button
                 variant="default"
                 size="lg"
-                iconRight={<ArrowRight className="size-4" />}
+                iconRight={<ArrowRight className="size-4 rtl:rotate-180" />}
                 asChild
                 className="w-full sm:w-auto"
               >
-                <Link href="/products">Shop Catalog</Link>
+                <Link href="/products">{t("hero.ctaCatalog")}</Link>
               </Button>
 
               <Button
@@ -64,9 +67,9 @@ export function HeroSection() {
                 size="lg"
                 iconLeft={<UploadCloud className="size-4 text-[#FF6B35]" />}
                 asChild
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto border-border/80"
               >
-                <Link href="/custom-prints">Request Custom Print</Link>
+                <Link href="/custom-prints">{t("hero.ctaCustom")}</Link>
               </Button>
             </div>
 
@@ -74,24 +77,24 @@ export function HeroSection() {
             <div className="pt-4 border-t border-border/60 grid grid-cols-2 sm:grid-cols-4 gap-4 w-full text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="size-4 text-[#FF6B35] shrink-0" />
-                <span>±0.08mm Tolerances</span>
+                <span>{t("hero.specTolerances")}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="size-4 text-[#FF6B35] shrink-0" />
-                <span>PETG-CF & Tough ABS</span>
+                <span>{t("hero.specMaterials")}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="size-4 text-[#FF6B35] shrink-0" />
-                <span>Instant Slicing Quote</span>
+                <span>{t("hero.specQuote")}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="size-4 text-[#FF6B35] shrink-0" />
-                <span>COD & InstaPay</span>
+                <span>{t("hero.specPayments")}</span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Visual 3D Studio Showcase */}
+          {/* Right/End Column: Visual 3D Studio Showcase */}
           <div className="lg:col-span-5 relative flex items-center justify-center">
             {/* Ambient Lighting Behind Visual */}
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-[#FF6B35]/20 via-[#111318]/5 to-transparent blur-2xl -z-10" />
@@ -100,7 +103,7 @@ export function HeroSection() {
             <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-[#111318] p-6 text-white shadow-2xl shadow-black/30 overflow-hidden">
               {/* Build Volume Grid Pattern */}
               <div className="absolute inset-0 bg-studio-grid opacity-30 pointer-events-none" />
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#FF6B35]/20 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute top-0 end-0 w-32 h-32 bg-[#FF6B35]/20 rounded-full blur-3xl pointer-events-none" />
 
               {/* Header Telemetry Bar */}
               <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
@@ -109,11 +112,11 @@ export function HeroSection() {
                     <Layers className="size-4" />
                   </div>
                   <span className="font-mono text-xs font-bold uppercase tracking-wider text-white">
-                    Bambu X1-Carbon #04
+                    {t("hero.farmMachine")}
                   </span>
                 </div>
                 <Badge variant="success" size="sm" dot pulse>
-                  Printing
+                  {t("hero.statusPrinting")}
                 </Badge>
               </div>
 
@@ -134,7 +137,7 @@ export function HeroSection() {
                       <Box className="size-10 text-[#FF6B35]" />
                     </div>
                     <span className="mt-2 font-mono text-[10px] text-gray-400">
-                      Z: 42.80 mm · Infill: 30% Gyroid
+                      {t("hero.specZ")}
                     </span>
                   </div>
                 </div>
@@ -142,7 +145,7 @@ export function HeroSection() {
                 {/* Print Progress Bar */}
                 <div className="absolute bottom-3 inset-x-4">
                   <div className="flex justify-between text-[10px] font-mono text-gray-400 mb-1">
-                    <span>Progress: Layer 214/340</span>
+                    <span>{t("hero.progressLayer")}</span>
                     <span className="text-[#FF6B35] font-bold">63%</span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
@@ -154,38 +157,38 @@ export function HeroSection() {
               {/* Telemetry Stats Grid */}
               <div className="mt-6 grid grid-cols-3 gap-2.5 font-mono text-xs">
                 <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
-                  <span className="text-[10px] text-gray-400 block">Nozzle</span>
+                  <span className="text-[10px] text-gray-400 block">{t("hero.nozzleTemp")}</span>
                   <span className="font-bold text-white">250°C</span>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
-                  <span className="text-[10px] text-gray-400 block">Bed Temp</span>
+                  <span className="text-[10px] text-gray-400 block">{t("hero.bedTemp")}</span>
                   <span className="font-bold text-white">65°C</span>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
-                  <span className="text-[10px] text-gray-400 block">Speed</span>
+                  <span className="text-[10px] text-gray-400 block">{t("hero.speed")}</span>
                   <span className="font-bold text-[#FF6B35]">250 mm/s</span>
                 </div>
               </div>
             </div>
 
-            {/* Floating Floating Telemetry Badges */}
-            <div className="hidden sm:flex absolute -bottom-4 -left-6 items-center gap-2.5 rounded-2xl border border-white/10 bg-[#1A1D24]/90 p-3 shadow-xl backdrop-blur-md animate-float">
+            {/* Floating Telemetry Badges */}
+            <div className="hidden sm:flex absolute -bottom-4 start-[-1.5rem] items-center gap-2.5 rounded-2xl border border-white/10 bg-[#1A1D24]/90 p-3 shadow-xl backdrop-blur-md animate-float">
               <div className="flex size-8 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
                 <Sparkles className="size-4" />
               </div>
               <div>
-                <span className="block text-[11px] font-bold text-white">Carbon Fiber Reinforced</span>
-                <span className="block text-[10px] text-gray-400">High stiffness & tensile load</span>
+                <span className="block text-[11px] font-bold text-white">{t("hero.floatingBadge1Title")}</span>
+                <span className="block text-[10px] text-gray-400">{t("hero.floatingBadge1Desc")}</span>
               </div>
             </div>
 
-            <div className="hidden sm:flex absolute -top-4 -right-4 items-center gap-2.5 rounded-2xl border border-white/10 bg-[#1A1D24]/90 p-3 shadow-xl backdrop-blur-md animate-float-delayed">
+            <div className="hidden sm:flex absolute -top-4 end-[-1rem] items-center gap-2.5 rounded-2xl border border-white/10 bg-[#1A1D24]/90 p-3 shadow-xl backdrop-blur-md animate-float-delayed">
               <div className="flex size-8 items-center justify-center rounded-xl bg-[#FF6B35]/15 text-[#FF6B35]">
                 <Cpu className="size-4" />
               </div>
               <div>
-                <span className="block text-[11px] font-bold text-white">Automatic Slicing Engine</span>
-                <span className="block text-[10px] text-gray-400">Instant weight & print time</span>
+                <span className="block text-[11px] font-bold text-white">{t("hero.floatingBadge2Title")}</span>
+                <span className="block text-[10px] text-gray-400">{t("hero.floatingBadge2Desc")}</span>
               </div>
             </div>
           </div>
@@ -194,4 +197,3 @@ export function HeroSection() {
     </section>
   );
 }
-

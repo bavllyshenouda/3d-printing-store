@@ -3,6 +3,7 @@
 import React, { useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/context";
 
 export interface ModalProps {
   open: boolean;
@@ -34,6 +35,8 @@ export function Modal({
   maxWidth = "lg",
   className,
 }: ModalProps) {
+  const { t } = useTranslation();
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -103,7 +106,7 @@ export function Modal({
             <button
               onClick={onClose}
               className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
-              aria-label="Close dialog"
+              aria-label={t("common.close")}
             >
               <X className="size-5" />
             </button>
