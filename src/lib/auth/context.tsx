@@ -48,6 +48,12 @@ export interface AuthContextValue {
     emailConfirmationRequired?: boolean;
   }>;
   logout: () => Promise<void>;
+  signInWithGoogle: (
+    next?: string
+  ) => Promise<{ success: boolean; error?: string; code?: string }>;
+  resendVerification: (
+    email: string
+  ) => Promise<{ success: boolean; error?: string }>;
   updateProfile: (data: {
     first_name?: string;
     last_name?: string;
@@ -216,6 +222,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Google OAuth handler (Sign-In and Sign-Up).
+  // Asks the server for the Supabase authorization URL, then navigates the
+  // browser to it. Supabase redirects back to /auth/callback which exchanges
+  // the code and establishes the session.
+  const signInWithGoogle = async (next?: string) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ next: next || "/profile" }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success || !json.data?.url) {
+        return {
+          success: false,
+          error: json.error || "Google sign-in is unavailable",
+          code: json.code,
+        };
+      }
+
+      window.location.assign(json.data.url);
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Google sign-in failed",
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Resend the signup confirmation email
+  const resendVerification = async (email: string) => {
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        return {
+          success: false,
+          error: json.error || "Could not resend verification email",
+        };
+      }
+
+      toast.success(t("auth.resendSuccessTitle"), t("auth.resendSuccessDesc"));
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Could not resend verification email",
+      };
+    }
+  };
+
   // Logout handler
   const logout = async () => {
     setIsLoading(true);
@@ -287,6 +356,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        signInWithGoogle,
+        resendVerification,
         updateProfile,
         refreshSession: fetchSessionData,
       }}

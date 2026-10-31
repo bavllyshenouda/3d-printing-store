@@ -48,6 +48,7 @@ export function CatalogSort({
         <ArrowUpDown className="pointer-events-none absolute start-3 size-3.5 text-muted-foreground" />
         <select
           id="catalog-sort"
+          aria-label={t("catalog.sortBy")}
           value={value}
           onChange={(e) => onChange(e.target.value as SortOption)}
           className={cn(

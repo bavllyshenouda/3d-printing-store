@@ -1,0 +1,101 @@
+table_name,column_name,data_type,udt_name,is_nullable,column_default,is_identity,identity_generation
+admins,user_id,uuid,uuid,NO,null,NO,null
+admins,created_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+cart_items,id,uuid,uuid,NO,gen_random_uuid(),NO,null
+cart_items,user_id,uuid,uuid,NO,null,NO,null
+cart_items,product_id,uuid,uuid,NO,null,NO,null
+cart_items,color,text,text,NO,null,NO,null
+cart_items,quantity,integer,int4,NO,null,NO,null
+cart_items,created_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+cart_items,updated_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+categories,id,uuid,uuid,NO,gen_random_uuid(),NO,null
+categories,name,text,text,NO,null,NO,null
+categories,slug,text,text,NO,null,NO,null
+categories,description,text,text,YES,null,NO,null
+categories,image_url,text,text,YES,null,NO,null
+categories,is_active,boolean,bool,NO,true,NO,null
+categories,sort_order,integer,int4,NO,0,NO,null
+categories,created_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+categories,updated_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+custom_print_files,id,uuid,uuid,NO,gen_random_uuid(),NO,null
+custom_print_files,request_id,uuid,uuid,NO,null,NO,null
+custom_print_files,storage_path,text,text,NO,null,NO,null
+custom_print_files,original_filename,text,text,NO,null,NO,null
+custom_print_files,mime_type,text,text,YES,null,NO,null
+custom_print_files,file_size_bytes,bigint,int8,YES,null,NO,null
+custom_print_files,created_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+custom_print_quotes,id,uuid,uuid,NO,gen_random_uuid(),NO,null
+custom_print_quotes,request_id,uuid,uuid,NO,null,NO,null
+custom_print_quotes,version,integer,int4,NO,1,NO,null
+custom_print_quotes,description,text,text,NO,null,NO,null
+custom_print_quotes,material,text,text,YES,null,NO,null
+custom_print_quotes,color,text,text,YES,null,NO,null
+custom_print_quotes,quantity,integer,int4,NO,null,NO,null
+custom_print_quotes,unit_price,numeric,numeric,NO,null,NO,null
+custom_print_quotes,total_price,numeric,numeric,YES,null,NO,null
+custom_print_quotes,estimated_days,integer,int4,YES,null,NO,null
+custom_print_quotes,status,text,text,NO,'draft'::text,NO,null
+custom_print_quotes,valid_until,timestamp with time zone,timestamptz,YES,null,NO,null
+custom_print_quotes,sent_at,timestamp with time zone,timestamptz,YES,null,NO,null
+custom_print_quotes,responded_at,timestamp with time zone,timestamptz,YES,null,NO,null
+custom_print_quotes,created_by,uuid,uuid,YES,null,NO,null
+custom_print_quotes,created_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+custom_print_quotes,updated_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+custom_print_requests,id,uuid,uuid,NO,gen_random_uuid(),NO,null
+custom_print_requests,request_number,bigint,int8,NO,null,YES,ALWAYS
+custom_print_requests,user_id,uuid,uuid,NO,null,NO,null
+custom_print_requests,title,text,text,YES,null,NO,null
+custom_print_requests,description,text,text,NO,null,NO,null
+custom_print_requests,quantity,integer,int4,NO,1,NO,null
+custom_print_requests,preferred_material,text,text,YES,null,NO,null
+custom_print_requests,preferred_color,text,text,YES,null,NO,null
+custom_print_requests,reference_url,text,text,YES,null,NO,null
+custom_print_requests,customer_notes,text,text,YES,null,NO,null
+custom_print_requests,status,text,text,NO,'submitted'::text,NO,null
+custom_print_requests,created_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+custom_print_requests,updated_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+customer_addresses,id,uuid,uuid,NO,gen_random_uuid(),NO,null
+customer_addresses,user_id,uuid,uuid,NO,null,NO,null
+customer_addresses,first_name,text,text,NO,null,NO,null
+customer_addresses,last_name,text,text,NO,null,NO,null
+customer_addresses,phone,text,text,NO,null,NO,null
+customer_addresses,email,text,text,YES,null,NO,null
+customer_addresses,country,text,text,NO,'Egypt'::text,NO,null
+customer_addresses,governorate,text,text,NO,null,NO,null
+customer_addresses,region,text,text,NO,null,NO,null
+customer_addresses,street_address,text,text,NO,null,NO,null
+customer_addresses,building,text,text,YES,null,NO,null
+customer_addresses,floor,text,text,YES,null,NO,null
+customer_addresses,apartment,text,text,YES,null,NO,null
+customer_addresses,notes,text,text,YES,null,NO,null
+customer_addresses,is_default,boolean,bool,NO,false,NO,null
+customer_addresses,created_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+customer_addresses,updated_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+order_items,id,uuid,uuid,NO,gen_random_uuid(),NO,null
+order_items,order_id,uuid,uuid,NO,null,NO,null
+order_items,product_id,uuid,uuid,YES,null,NO,null
+order_items,product_name,text,text,NO,null,NO,null
+order_items,product_image_url,text,text,YES,null,NO,null
+order_items,color,text,text,NO,null,NO,null
+order_items,quantity,integer,int4,NO,null,NO,null
+order_items,unit_price,numeric,numeric,NO,null,NO,null
+order_items,line_total,numeric,numeric,YES,null,NO,null
+order_items,created_at,timestamp with time zone,timestamptz,NO,now(),NO,null
+orders,id,uuid,uuid,NO,gen_random_uuid(),NO,null
+orders,order_number,bigint,int8,NO,null,YES,ALWAYS
+orders,user_id,uuid,uuid,YES,null,NO,null
+orders,status,text,text,NO,'pending_customer_confirmation'::text,NO,null
+orders,payment_method,text,text,NO,null,NO,null
+orders,payment_status,text,text,NO,'pending'::text,NO,null
+orders,currency,text,text,NO,'EGP'::text,NO,null
+orders,subtotal,numeric,numeric,NO,null,NO,null
+orders,shipping_fee,numeric,numeric,NO,0,NO,null
+orders,discount_amount,numeric,numeric,NO,0,NO,null
+orders,total,numeric,numeric,NO,null,NO,null
+orders,customer_first_name,text,text,NO,null,NO,null
+orders,customer_last_name,text,text,NO,null,NO,null
+orders,customer_phone,text,text,NO,null,NO,null
+orders,customer_email,text,text,YES,null,NO,null
+orders,country,text,text,NO,'Egypt'::text,NO,null
+orders,governorate,text,text,NO,null,NO,null
+orders,region,text,text,NO,null,NO,null

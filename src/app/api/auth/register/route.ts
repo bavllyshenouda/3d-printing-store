@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { registerSchema } from "@/lib/validations/auth";
+import { getAuthBaseUrl } from "@/lib/auth/redirect";
 
 export async function POST(request: Request) {
   try {
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
 
     const { email, password, first_name, last_name, phone } = parseResult.data;
     const supabase = await createClient();
+    const baseUrl = await getAuthBaseUrl(request);
 
     // Sign up with Supabase Auth.
     // User metadata (first_name, last_name, phone) is passed to trigger handle_new_user()
@@ -27,6 +29,11 @@ export async function POST(request: Request) {
       email,
       password,
       options: {
+        // Send the email-confirmation link back to our callback so the session
+        // is established in this app after the user verifies their address.
+        emailRedirectTo: `${baseUrl}/auth/callback?next=${encodeURIComponent(
+          "/profile"
+        )}`,
         data: {
           first_name,
           last_name,

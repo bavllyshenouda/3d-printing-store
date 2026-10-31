@@ -78,7 +78,7 @@ export function CheckoutSuccessView() {
           {isLoading ? (
             <Skeleton className="h-44 w-full rounded-2xl" />
           ) : order ? (
-            <div className="rounded-2xl border border-border/60 bg-muted/20 p-5 text-left text-xs sm:text-sm space-y-3.5 max-w-md mx-auto">
+            <div className="rounded-2xl border border-border/60 bg-muted/20 p-5 text-start text-xs sm:text-sm space-y-3.5 max-w-md mx-auto">
               <div className="flex items-center justify-between pb-3 border-b border-border/60">
                 <span className="text-muted-foreground">{t("checkout.orderNumber")}</span>
                 <span className="font-mono font-bold text-foreground text-sm sm:text-base text-[#FF6B35]">
@@ -114,7 +114,7 @@ export function CheckoutSuccessView() {
 
           {/* Payment Instructions for InstaPay / Vodafone Cash */}
           {order && (order.payment_method === "instapay" || order.payment_method === "vodafone_cash") && (
-            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 text-left max-w-md mx-auto space-y-3">
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 text-start max-w-md mx-auto space-y-3">
               <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs sm:text-sm">
                 {order.payment_method === "instapay" ? (
                   <Smartphone className="size-4 shrink-0" />

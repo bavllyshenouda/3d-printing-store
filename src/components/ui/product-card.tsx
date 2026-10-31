@@ -95,7 +95,7 @@ export function ProductCard({
             setIsFavorited(!isFavorited);
           }}
           className="absolute top-3 end-3 z-10 flex size-8 items-center justify-center rounded-full bg-white/80 dark:bg-[#111318]/80 text-foreground backdrop-blur-md transition-all hover:bg-white dark:hover:bg-[#111318] hover:scale-110 active:scale-95 shadow-sm"
-          aria-label={isFavorited ? "Remove from wishlist" : "Add to wishlist"}
+          aria-label={isFavorited ? t("common.removeFromWishlist") : t("common.addToWishlist")}
         >
           <Heart
             className={cn(
@@ -120,8 +120,8 @@ export function ProductCard({
               />
             </div>
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted/40 font-mono text-xs text-muted-foreground">
-              [No Image Available]
+            <div className="flex h-full w-full items-center justify-center bg-muted/40 font-mono text-xs text-muted-foreground px-2 text-center">
+              {t("common.noImageAvailable")}
             </div>
           )}
         </Link>
@@ -185,7 +185,7 @@ export function ProductCard({
                         ? "#C0C0C0"
                         : color,
                   }}
-                  aria-label={`Select color ${color}`}
+                  aria-label={t("common.selectColor", { color })}
                 />
               );
             })}

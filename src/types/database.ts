@@ -568,6 +568,8 @@ export type Database = {
           preferred_color: string | null;
           reference_url: string | null;
           customer_notes: string | null;
+          rejection_reason: string | null;
+          rejected_at: string | null;
           status: string;
           created_at: string;
           updated_at: string;
@@ -583,6 +585,8 @@ export type Database = {
           preferred_color?: string | null;
           reference_url?: string | null;
           customer_notes?: string | null;
+          rejection_reason?: string | null;
+          rejected_at?: string | null;
           status?: string;
           created_at?: string;
           updated_at?: string;
@@ -598,6 +602,8 @@ export type Database = {
           preferred_color?: string | null;
           reference_url?: string | null;
           customer_notes?: string | null;
+          rejection_reason?: string | null;
+          rejected_at?: string | null;
           status?: string;
           created_at?: string;
           updated_at?: string;
@@ -881,6 +887,13 @@ export type Database = {
         Args: {
           p_quote_id: string;
           p_reason?: string;
+        };
+        Returns: Json;
+      };
+admin_reject_custom_print_request: {
+        Args: {
+          p_request_id: string;
+          p_reason: string;
         };
         Returns: Json;
       };

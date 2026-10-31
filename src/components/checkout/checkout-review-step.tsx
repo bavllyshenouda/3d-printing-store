@@ -238,7 +238,7 @@ export function CheckoutReviewStep({
               </div>
 
               {/* Line Total */}
-              <div className="text-right shrink-0">
+              <div className="text-end shrink-0">
                 <span className="font-mono font-bold text-xs sm:text-sm text-foreground">
                   {item.line_total} {t("common.egp")}
                 </span>

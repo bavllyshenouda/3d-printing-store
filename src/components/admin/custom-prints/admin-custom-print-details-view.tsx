@@ -16,8 +16,10 @@ import {
   Calculator,
   User,
   Eye,
+  Ban,
 } from "lucide-react";
 import { CreateQuoteModal } from "./create-quote-modal";
+import { RejectRequestModal } from "./reject-request-modal";
 import { STLViewer } from "@/components/custom-prints/stl-viewer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +40,7 @@ export function AdminCustomPrintDetailsView({
   const [fileUrls, setFileUrls] = useState<Record<string, string>>({});
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
   const fetchRequest = useCallback(async () => {
     setIsLoading(true);
@@ -70,8 +73,10 @@ export function AdminCustomPrintDetailsView({
                 );
                 if (urlRes.ok) {
                   const urlJson = await urlRes.json();
-                  if (urlJson.success && urlJson.data?.preview_url) {
-                    urlMap[file.id] = urlJson.data.preview_url;
+                  const signedUrl =
+                    urlJson.data?.signed_url || urlJson.data?.preview_url;
+                  if (urlJson.success && signedUrl) {
+                    urlMap[file.id] = signedUrl;
                   }
                 }
               } catch {
@@ -127,6 +132,10 @@ export function AdminCustomPrintDetailsView({
     /\.(jpg|jpeg|png|webp|gif)$/i.test(selectedFile?.original_filename || "");
 
   const quotes = request.quotes || [];
+  const isRejected = request.status === "rejected";
+  const isTerminalStatus = ["rejected", "completed", "cancelled"].includes(
+    request.status
+  );
 
   return (
     <div className="space-y-6">
@@ -155,12 +164,18 @@ export function AdminCustomPrintDetailsView({
                   "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold uppercase",
                   request.status === "submitted" &&
                     "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
-                  request.status === "quoted" &&
+                  request.status === "quote_sent" &&
                     "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20",
                   request.status === "accepted" &&
                     "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
                   request.status === "in_production" &&
-                    "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
+                    "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20",
+                  request.status === "completed" &&
+                    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                  request.status === "rejected" &&
+                    "bg-red-500/10 text-red-500 border border-red-500/20",
+                  request.status === "cancelled" &&
+                    "bg-zinc-500/10 text-zinc-500 border border-zinc-500/20"
                 )}
               >
                 {request.status.replace(/_/g, " ")}
@@ -173,15 +188,48 @@ export function AdminCustomPrintDetailsView({
           </div>
         </div>
 
-        <Button
-          size="sm"
-          onClick={() => setIsQuoteModalOpen(true)}
-          className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white text-xs h-9 shadow-sm shrink-0"
-        >
-          <Calculator className="size-3.5 me-1.5" />
-          {t("admin.customPrintsModule.createQuote")}
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          {!isTerminalStatus && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsRejectModalOpen(true)}
+              className="text-red-600 dark:text-red-400 border-red-500/30 hover:bg-red-500/10 text-xs h-9"
+            >
+              <Ban className="size-3.5 me-1.5" />
+              {t("admin.customPrintsModule.rejectRequest")}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            onClick={() => setIsQuoteModalOpen(true)}
+            className="bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white text-xs h-9 shadow-sm"
+          >
+            <Calculator className="size-3.5 me-1.5" />
+            {t("admin.customPrintsModule.createQuote")}
+          </Button>
+        </div>
       </div>
+
+      {/* Rejection reason banner (admin view) */}
+      {isRejected && (
+        <div className="flex items-start gap-3 p-4 rounded-2xl bg-red-500/10 border border-red-500/20">
+          <AlertCircle className="size-5 text-red-500 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-red-600 dark:text-red-400">
+              {t("admin.customPrintsModule.rejectionReasonLabel")}
+            </p>
+            <p className="text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap">
+              {request.rejection_reason || "—"}
+            </p>
+            {request.rejected_at && (
+              <p className="text-[10px] font-mono text-muted-foreground">
+                {new Date(request.rejected_at).toLocaleString()}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Layout: 3D Model Inspection + Parameters & Quote History */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -309,6 +357,37 @@ export function AdminCustomPrintDetailsView({
 
         {/* Right Col: Specifications & Quotes History */}
         <div className="space-y-6">
+          {/* Customer Info Card */}
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+            <h2 className="text-sm font-heading font-bold text-foreground flex items-center gap-2">
+              <User className="size-4 text-[#FF6B35]" />
+              Customer
+            </h2>
+
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1 border-b border-border/60 gap-3">
+                <span className="text-muted-foreground shrink-0">Name:</span>
+                <span className="font-bold text-foreground truncate text-end">
+                  {[request.profile?.first_name, request.profile?.last_name]
+                    .filter(Boolean)
+                    .join(" ") || "Guest"}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border/60 gap-3">
+                <span className="text-muted-foreground shrink-0">Email:</span>
+                <span className="font-mono text-foreground truncate text-end">
+                  {request.profile?.email || "—"}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border/60 gap-3">
+                <span className="text-muted-foreground shrink-0">Phone:</span>
+                <span className="font-mono text-foreground truncate text-end">
+                  {request.profile?.phone || "—"}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Client Specs Card */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
             <h2 className="text-sm font-heading font-bold text-foreground">
@@ -325,13 +404,13 @@ export function AdminCustomPrintDetailsView({
               <div className="flex justify-between py-1 border-b border-border/60">
                 <span className="text-muted-foreground">Preferred Material:</span>
                 <span className="font-bold font-mono text-foreground">
-                  {request.material || "Flexible / Studio Choice"}
+                  {request.preferred_material || "Flexible / Studio Choice"}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-border/60">
                 <span className="text-muted-foreground">Preferred Color:</span>
                 <span className="font-bold font-mono text-foreground">
-                  {request.color || "Any Available"}
+                  {request.preferred_color || "Any Available"}
                 </span>
               </div>
             </div>
@@ -344,6 +423,34 @@ export function AdminCustomPrintDetailsView({
                 <p className="p-3 rounded-xl bg-muted/40 text-xs text-foreground leading-relaxed">
                   {request.description}
                 </p>
+              </div>
+            )}
+
+            {request.customer_notes && (
+              <div className="pt-2">
+                <span className="text-[10px] font-mono text-muted-foreground uppercase block mb-1">
+                  Special Notes
+                </span>
+                <p className="p-3 rounded-xl bg-muted/40 text-xs text-foreground leading-relaxed italic">
+                  &ldquo;{request.customer_notes}&rdquo;
+                </p>
+              </div>
+            )}
+
+            {request.reference_url && (
+              <div className="pt-2">
+                <span className="text-[10px] font-mono text-muted-foreground uppercase block mb-1">
+                  Reference Link
+                </span>
+                <a
+                  href={request.reference_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[#FF6B35] font-mono text-xs hover:underline"
+                >
+                  <span className="truncate">{request.reference_url}</span>
+                  <ExternalLink className="size-3 shrink-0" />
+                </a>
               </div>
             )}
           </div>
@@ -424,6 +531,12 @@ export function AdminCustomPrintDetailsView({
       <CreateQuoteModal
         isOpen={isQuoteModalOpen}
         onClose={() => setIsQuoteModalOpen(false)}
+        onSuccess={fetchRequest}
+        request={request}
+      />
+      <RejectRequestModal
+        isOpen={isRejectModalOpen}
+        onClose={() => setIsRejectModalOpen(false)}
         onSuccess={fetchRequest}
         request={request}
       />

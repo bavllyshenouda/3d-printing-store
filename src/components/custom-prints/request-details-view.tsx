@@ -311,7 +311,7 @@ export function RequestDetailsView({ requestId }: RequestDetailsViewProps) {
         </div>
 
         {/* Top Header Card */}
-        <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 mb-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6 text-left">
+        <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 mb-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6 text-start">
           <div className="space-y-2">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="font-heading text-2xl sm:text-3xl font-black tracking-tight text-foreground">
@@ -332,8 +332,33 @@ export function RequestDetailsView({ requestId }: RequestDetailsViewProps) {
           </div>
         </div>
 
+        {/* Rejection banner: shown only when the studio rejected this request */}
+        {request.status === "rejected" && (
+          <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-6 sm:p-7 mb-8 flex items-start gap-4 text-start">
+            <AlertCircle className="size-6 text-red-500 shrink-0 mt-0.5" />
+            <div className="space-y-2">
+              <h2 className="font-heading text-base sm:text-lg font-bold text-red-600 dark:text-red-400">
+                {t("customPrintApp.rejectedBannerTitle")}
+              </h2>
+              <p className="text-xs sm:text-sm text-foreground/80">
+                {t("customPrintApp.rejectedBannerDesc")}
+              </p>
+              {request.rejection_reason && (
+                <div className="space-y-1 pt-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground block">
+                    {t("customPrintApp.rejectionReasonLabel")}
+                  </span>
+                  <p className="text-xs sm:text-sm text-foreground/90 whitespace-pre-line leading-relaxed bg-background/60 p-3 rounded-2xl border border-red-500/20">
+                    {request.rejection_reason}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* 2-Column Main Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-start">
           {/* Left Column (8 cols): Description, Files, and Quotes */}
           <div className="lg:col-span-8 space-y-8">
             {/* Description & Specs Card */}
@@ -558,7 +583,7 @@ export function RequestDetailsView({ requestId }: RequestDetailsViewProps) {
                             </p>
                           </div>
 
-                          <div className="text-left sm:text-right">
+                          <div className="text-start sm:text-end">
                             <span className="text-[10px] uppercase font-bold text-muted-foreground block">
                               {t("customPrintApp.totalPrice")}
                             </span>
@@ -742,7 +767,7 @@ export function RequestDetailsView({ requestId }: RequestDetailsViewProps) {
             })}
             maxWidth="xl"
           >
-            <form onSubmit={handleConfirmAcceptQuote} className="space-y-5 pt-2 text-left">
+            <form onSubmit={handleConfirmAcceptQuote} className="space-y-5 pt-2 text-start">
               <p className="text-xs text-muted-foreground">
                 {t("customPrintApp.acceptModalDesc")}
               </p>
@@ -894,7 +919,7 @@ export function RequestDetailsView({ requestId }: RequestDetailsViewProps) {
             })}
             maxWidth="md"
           >
-            <form onSubmit={handleConfirmRejectQuote} className="space-y-4 pt-2 text-left">
+            <form onSubmit={handleConfirmRejectQuote} className="space-y-4 pt-2 text-start">
               <div className="space-y-1.5">
                 <label
                   htmlFor="reject-reason-input"

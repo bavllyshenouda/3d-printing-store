@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export interface LanguageSwitcherProps {
   className?: string;
-  variant?: "pill" | "dropdown" | "mobile";
+  variant?: "pill" | "dropdown" | "mobile" | "icon";
 }
 
 export function LanguageSwitcher({
@@ -21,6 +21,25 @@ export function LanguageSwitcher({
     const next: Locale = locale === "en" ? "ar" : "en";
     setLocale(next);
   };
+
+  if (variant === "icon") {
+    return (
+      <button
+        type="button"
+        onClick={handleToggle}
+        className={cn(
+          "flex size-8 sm:size-9 items-center justify-center rounded-xl border border-border/80 bg-background/80 text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B35]",
+          className
+        )}
+        title={locale === "en" ? "التبديل إلى العربية" : "Switch to English"}
+        aria-label={
+          locale === "en" ? "Switch language to Arabic" : "تغيير اللغة إلى الإنجليزية"
+        }
+      >
+        <Globe className="size-4" />
+      </button>
+    );
+  }
 
   if (variant === "mobile") {
     return (

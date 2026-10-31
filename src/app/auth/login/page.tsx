@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <AuthSplitLayout
-      title="Welcome Back"
-      subtitle="Sign in to your account to track your orders, upload CAD designs, and review quotes."
+      titleKey="auth.loginTitle"
+      subtitleKey="auth.loginSubtitle"
     >
       <LoginForm />
     </AuthSplitLayout>

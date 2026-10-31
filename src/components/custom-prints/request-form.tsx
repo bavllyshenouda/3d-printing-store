@@ -158,7 +158,7 @@ export function RequestForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 text-left" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-8 text-start" noValidate>
       {errors.form && (
         <div
           role="alert"

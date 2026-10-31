@@ -17,14 +17,17 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth/context";
 import { useTranslation } from "@/lib/i18n/context";
 import { EGYPTIAN_PHONE_REGEX } from "@/lib/validations/auth";
+import { GoogleAuthButton } from "@/components/auth/google-auth-button";
+import { resolveAuthMessage } from "@/lib/auth/error-messages";
 
 export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { register, isAuthenticated } = useAuth();
+  const { register, isAuthenticated, resendVerification } = useAuth();
   const { t } = useTranslation();
 
   const redirectParam = searchParams.get("redirect");
@@ -48,6 +51,7 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [errors, setErrors] = useState<{
     firstName?: string;
     lastName?: string;
@@ -67,28 +71,29 @@ export function RegisterForm() {
     } = {};
 
     if (!firstName.trim()) {
-      newErrors.firstName = "First name is required";
+      newErrors.firstName = t("auth.errFirstNameRequired");
     }
 
     if (!lastName.trim()) {
-      newErrors.lastName = "Last name is required";
+      newErrors.lastName = t("auth.errLastNameRequired");
     }
 
     if (!email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = t("auth.errEmailRequired");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = t("auth.errEmailInvalid");
     }
 
     if (!password) {
-      newErrors.password = "Password is required";
+      newErrors.password = t("auth.errPasswordRequired");
     } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters long";
+      newErrors.password = t("auth.errPasswordShort");
     }
 
-    if (phone.trim() && !EGYPTIAN_PHONE_REGEX.test(phone.trim())) {
-      newErrors.phone =
-        "Invalid Egyptian phone number. Must be 11 digits starting with 010, 011, 012, or 015.";
+    if (!phone.trim()) {
+      newErrors.phone = t("auth.errPhoneRequired");
+    } else if (!EGYPTIAN_PHONE_REGEX.test(phone.trim())) {
+      newErrors.phone = t("auth.errPhoneInvalid");
     }
 
     setErrors(newErrors);
@@ -118,9 +123,22 @@ export function RegisterForm() {
         router.refresh();
       }
     } else {
-      setErrors({ general: result.error || "Registration failed" });
+      setErrors({ general: resolveAuthMessage(result.error, t, "auth.errRegisterFailed") });
       setIsSubmitting(false);
     }
+  };
+
+  const handleResend = async () => {
+    if (!email || isResending) return;
+    setIsResending(true);
+    const res = await resendVerification(email.trim());
+    if (!res.success) {
+      toast.error(
+        t("auth.resendFailedTitle"),
+        resolveAuthMessage(res.error, t, "auth.resendFailedDesc")
+      );
+    }
+    setIsResending(false);
   };
 
   // If email verification notice is required
@@ -141,6 +159,16 @@ export function RegisterForm() {
             {t("auth.signInLink")}
           </Button>
         </Link>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={handleResend}
+          disabled={isResending || !email}
+          className="text-xs text-muted-foreground hover:text-[#FF6B35]"
+        >
+          {isResending ? t("auth.resending") : t("auth.resendVerification")}
+        </Button>
       </div>
     );
   }
@@ -237,10 +265,12 @@ export function RegisterForm() {
         autoComplete="new-password"
       />
 
-      {/* Phone Number Input (Optional) */}
+      {/* Phone Number Input (Required) */}
       <Input
         label={t("auth.phoneLabel")}
         type="tel"
+        inputMode="numeric"
+        maxLength={11}
         value={phone}
         onChange={(e) => {
           setPhone(e.target.value);
@@ -250,6 +280,7 @@ export function RegisterForm() {
         helperText={t("auth.phoneHelper")}
         error={errors.phone}
         disabled={isSubmitting}
+        required
         iconLeft={<Phone className="size-4" />}
         autoComplete="tel"
       />
@@ -266,6 +297,13 @@ export function RegisterForm() {
       >
         {isSubmitting ? t("auth.registering") : t("auth.registerButton")}
       </Button>
+
+      {/* Google OAuth Sign-Up */}
+      <GoogleAuthButton
+        next={safeRedirect}
+        disabled={isSubmitting}
+        onError={(message) => setErrors({ general: message })}
+      />
 
       {/* Switch to Login */}
       <p className="text-center text-xs sm:text-sm text-muted-foreground pt-2">

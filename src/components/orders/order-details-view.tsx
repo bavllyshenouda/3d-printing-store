@@ -37,6 +37,7 @@ import {
   FileText,
 } from "lucide-react";
 import type { Order, OrderItem, ShippingEvent } from "@/types/database";
+import { isRenderableImageUrl } from "@/lib/orders/image-url";
 
 export interface DetailedOrder extends Order {
   items: OrderItem[];
@@ -337,7 +338,7 @@ export function OrderDetailsView({ orderId }: OrderDetailsViewProps) {
                   <div key={item.id} className="py-4 flex items-center gap-4">
                     {/* Thumbnail */}
                     <div className="relative size-16 sm:size-20 rounded-2xl overflow-hidden bg-muted/60 shrink-0 border border-border/60">
-                      {item.product_image_url ? (
+                      {isRenderableImageUrl(item.product_image_url) ? (
                         <Image
                           src={item.product_image_url}
                           alt={item.product_name}
@@ -371,7 +372,7 @@ export function OrderDetailsView({ orderId }: OrderDetailsViewProps) {
                     </div>
 
                     {/* Total */}
-                    <div className="text-right shrink-0">
+                    <div className="text-end shrink-0">
                       <span className="font-mono font-bold text-sm sm:text-base text-foreground">
                         {item.line_total} {order.currency || "EGP"}
                       </span>

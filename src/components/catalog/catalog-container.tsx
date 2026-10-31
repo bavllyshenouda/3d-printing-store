@@ -275,7 +275,7 @@ export function CatalogContainer({
             </div>
 
             {/* Sort & Mobile Trigger */}
-            <div className="flex items-center justify-between sm:justify-end gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:justify-end">
               <CatalogFilterDrawer
                 categories={categories}
                 materials={materials}

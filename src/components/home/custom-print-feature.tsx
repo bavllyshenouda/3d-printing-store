@@ -143,12 +143,12 @@ export function CustomPrintFeature() {
 
               {/* Simulated Sliced File Widget */}
               <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex size-9 items-center justify-center rounded-xl bg-white/10 text-[#FF6B35]">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex min-w-0 basis-full items-center gap-2.5 sm:basis-auto">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#FF6B35]">
                       <Layers className="size-5" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <span className="block font-mono text-xs font-bold text-white truncate max-w-[180px] sm:max-w-[220px]">
                         {t("customPrint.fileName")}
                       </span>
@@ -157,7 +157,7 @@ export function CustomPrintFeature() {
                       </span>
                     </div>
                   </div>
-                  <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/30">
+                  <span className="shrink-0 rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/30">
                     {t("customPrint.verified")}
                   </span>
                 </div>

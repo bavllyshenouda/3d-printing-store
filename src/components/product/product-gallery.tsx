@@ -119,7 +119,7 @@ export function ProductGallery({
           <button
             type="button"
             onClick={() => setIsZoomOpen(true)}
-            className="absolute top-4 end-4 z-10 flex size-9 items-center justify-center rounded-xl bg-white/80 dark:bg-[#111318]/80 text-foreground backdrop-blur-md transition-all hover:bg-white dark:hover:bg-[#111318] hover:scale-105 active:scale-95 shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100"
+            className="absolute top-4 end-4 z-10 flex size-9 items-center justify-center rounded-xl bg-white/80 dark:bg-[#111318]/80 text-foreground backdrop-blur-md transition-all hover:bg-white dark:hover:bg-[#111318] hover:scale-105 active:scale-95 shadow-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
             aria-label={t("product.enlargeImage")}
           >
             <Maximize2 className="size-4" />
@@ -144,7 +144,7 @@ export function ProductGallery({
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center text-muted-foreground bg-muted/40 font-mono text-xs">
             <Layers className="size-10 mb-2 opacity-40 text-[#FF6B35]" />
-            <span>[No High-Resolution Image Available]</span>
+            <span>{t("common.noImageAvailable")}</span>
           </div>
         )}
 
@@ -157,7 +157,7 @@ export function ProductGallery({
                 e.stopPropagation();
                 handlePrev();
               }}
-              className="absolute start-3 top-1/2 -translate-y-1/2 z-10 flex size-9 items-center justify-center rounded-full bg-white/90 dark:bg-[#111318]/90 text-foreground backdrop-blur-md shadow-sm transition-all hover:scale-110 active:scale-95 opacity-0 group-hover:opacity-100 focus:opacity-100"
+              className="absolute start-3 top-1/2 -translate-y-1/2 z-10 flex size-9 items-center justify-center rounded-full bg-white/90 dark:bg-[#111318]/90 text-foreground backdrop-blur-md shadow-sm transition-all hover:scale-110 active:scale-95 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
               aria-label={t("product.prevImage")}
             >
               {isRTL ? (
@@ -173,7 +173,7 @@ export function ProductGallery({
                 e.stopPropagation();
                 handleNext();
               }}
-              className="absolute end-3 top-1/2 -translate-y-1/2 z-10 flex size-9 items-center justify-center rounded-full bg-white/90 dark:bg-[#111318]/90 text-foreground backdrop-blur-md shadow-sm transition-all hover:scale-110 active:scale-95 opacity-0 group-hover:opacity-100 focus:opacity-100"
+              className="absolute end-3 top-1/2 -translate-y-1/2 z-10 flex size-9 items-center justify-center rounded-full bg-white/90 dark:bg-[#111318]/90 text-foreground backdrop-blur-md shadow-sm transition-all hover:scale-110 active:scale-95 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
               aria-label={t("product.nextImage")}
             >
               {isRTL ? (

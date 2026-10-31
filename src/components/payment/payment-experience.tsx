@@ -143,7 +143,7 @@ export function PaymentExperience({ orderId }: PaymentExperienceProps) {
         </div>
 
         {/* Page Title */}
-        <div className="mb-8 text-left">
+        <div className="mb-8 text-start">
           <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             {t("payment.title")}
           </h1>

@@ -170,7 +170,7 @@ export function PaymentProofUpload({
   return (
     <div
       className={cn(
-        "rounded-3xl border border-border/80 bg-card p-6 shadow-xs space-y-5 text-left",
+        "rounded-3xl border border-border/80 bg-card p-6 shadow-xs space-y-5 text-start",
         className
       )}
     >

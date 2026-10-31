@@ -66,7 +66,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             required={required}
             className={cn(
-              "w-full bg-transparent px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none disabled:cursor-not-allowed",
+              "w-full bg-transparent px-3.5 py-2.5 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/60 outline-none disabled:cursor-not-allowed",
               iconLeft && "ps-1.5",
               iconRight && "pe-1.5",
               className

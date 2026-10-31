@@ -39,18 +39,23 @@ export function ProductsTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
 
-  // Fetch categories for filter dropdown & modal
+  // Fetch categories for the filter dropdown & the product form modal.
+  // Surfaces load failures instead of silently leaving the list empty, so an admin
+  // can tell "no categories yet" apart from "loading categories failed" (e.g. RLS/permissions).
   const fetchCategories = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/categories");
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          setCategories(json.data.categories || []);
-        }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.error || `Request failed with status ${res.status}`);
       }
-    } catch {
-      // Ignored
+      setCategories(json.data?.categories || []);
+    } catch (err) {
+      console.error("Categories load error:", err);
+      toast.error(
+        "Categories unavailable",
+        err instanceof Error ? err.message : "Could not load categories"
+      );
     }
   }, []);
 
@@ -132,6 +137,15 @@ export function ProductsTable() {
     setEditingProduct(prod);
     setIsModalOpen(true);
   };
+
+  // Called when a category is created inline from the product form, so the local
+  // list (filter dropdown + modal) updates immediately without a full refetch.
+  const handleCategoryCreated = useCallback((category: any) => {
+    if (!category?.id) return;
+    setCategories((prev) =>
+      prev.some((c) => c.id === category.id) ? prev : [...prev, category]
+    );
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -354,6 +368,7 @@ export function ProductsTable() {
         onSuccess={() => fetchProducts(pagination.page)}
         product={editingProduct}
         categories={categories}
+        onCategoryCreated={handleCategoryCreated}
       />
     </div>
   );

@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/context";
 import { useTranslation } from "@/lib/i18n/context";
+import { GoogleAuthButton } from "@/components/auth/google-auth-button";
+import { resolveAuthMessage } from "@/lib/auth/error-messages";
 
 export function LoginForm() {
   const router = useRouter();
@@ -25,6 +27,7 @@ export function LoginForm() {
   const { t, isRTL } = useTranslation();
 
   const redirectParam = searchParams.get("redirect");
+  const authErrorParam = searchParams.get("auth_error");
   const safeRedirect =
     redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
       ? redirectParam
@@ -40,7 +43,9 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>(
+    authErrorParam ? { general: resolveAuthMessage(authErrorParam, t) } : {}
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForgotNotice, setShowForgotNotice] = useState(false);
 
@@ -48,13 +53,13 @@ export function LoginForm() {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = t("auth.errEmailRequired");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = t("auth.errEmailInvalid");
     }
 
     if (!password) {
-      newErrors.password = "Password is required";
+      newErrors.password = t("auth.errPasswordRequired");
     }
 
     setErrors(newErrors);
@@ -74,7 +79,7 @@ export function LoginForm() {
       router.push(safeRedirect);
       router.refresh();
     } else {
-      setErrors({ general: result.error || "Invalid email or password" });
+      setErrors({ general: resolveAuthMessage(result.error, t, "auth.errLoginFailed") });
       setIsSubmitting(false);
     }
   };
@@ -144,7 +149,7 @@ export function LoginForm() {
             onClick={() => setShowForgotNotice(!showForgotNotice)}
             className="text-[11px] text-muted-foreground hover:text-[#FF6B35] transition-colors"
           >
-            Forgot Password?
+            {t("auth.forgotPassword")}
           </button>
         </div>
 
@@ -169,6 +174,13 @@ export function LoginForm() {
       >
         {isSubmitting ? t("auth.loggingIn") : t("auth.loginButton")}
       </Button>
+
+      {/* Google OAuth Sign-In */}
+      <GoogleAuthButton
+        next={safeRedirect}
+        disabled={isSubmitting}
+        onError={(message) => setErrors({ general: message })}
+      />
 
       {/* Switch to Register */}
       <p className="text-center text-xs sm:text-sm text-muted-foreground pt-2">

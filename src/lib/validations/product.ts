@@ -1,12 +1,18 @@
 import { z } from "zod";
 
-export const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+// Slug pattern is Unicode-aware so Arabic (and other non-Latin) category/product names
+// produce valid slugs instead of being rejected. Allows letters/numbers from any script,
+// separated by single hyphens.
+export const SLUG_REGEX = /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u;
 
 export function slugify(text: string): string {
   return text
+    .normalize("NFKC")
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, "")
+    // Keep Unicode letters (\p{L}) and numbers (\p{N}); drop punctuation/symbols/diacritics.
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    // Collapse whitespace / underscores / repeated hyphens into a single hyphen.
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }

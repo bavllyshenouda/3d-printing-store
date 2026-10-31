@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -45,6 +45,10 @@ export function Navbar({
   const [isScrolled, setIsScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(propCartCount);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  // Measured header height so the mobile menu always sits exactly below the bar on
+  // every viewport / scroll state / locale. Defaults to the previous fixed 88px.
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(88);
   const pathname = usePathname();
   const { t, isRTL } = useTranslation();
   const { user: authUser, profile, logout, isAuthenticated, isAdmin } = useAuth();
@@ -115,6 +119,18 @@ export function Navbar({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Track the real header height (ticker + nav) so the mobile menu offset is exact
+  // across viewports, the scrolled/compact state, RTL and font scaling.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      setHeaderHeight(el.offsetHeight);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   // Lock body scroll when mobile menu is active
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -155,11 +171,11 @@ export function Navbar({
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full">
+    <header ref={headerRef} className="sticky top-0 z-40 w-full">
       {/* Top Studio Status Ticker */}
       <div className="bg-[#111318] text-white py-1.5 px-4 text-xs font-mono border-b border-white/5 overflow-hidden">
-        <Container size="xl" className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <Container size="xl" className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
             <span className="size-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
             <span className="text-gray-300 truncate">
               {t("nav.tickerStatus")}
@@ -188,20 +204,20 @@ export function Navbar({
             : "border-border/50 py-3.5"
         )}
       >
-        <Container size="xl" className="flex items-center justify-between gap-3">
+        <Container size="xl" className="flex items-center justify-between gap-2 sm:gap-3">
           {/* Logo Branding */}
           <Link
             href="/"
-            className="group flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B35] rounded-lg shrink-0"
+            className="group flex items-center gap-2 sm:gap-2.5 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B35] rounded-lg shrink"
           >
-            <div className="flex size-9 items-center justify-center rounded-xl bg-[#111318] dark:bg-white/10 text-white shadow-sm transition-transform duration-300 group-hover:scale-105 border border-white/10">
+            <div className="flex size-8 sm:size-9 items-center justify-center rounded-xl bg-[#111318] dark:bg-white/10 text-white shadow-sm transition-transform duration-300 group-hover:scale-105 border border-white/10 shrink-0">
               <Layers className="size-5 text-[#FF6B35]" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-heading text-lg font-black tracking-tight text-foreground leading-none">
+            <div className="flex flex-col min-w-0">
+              <span className="font-heading text-base sm:text-lg font-black tracking-tight text-foreground leading-none truncate">
                 PRINT<span className="text-[#FF6B35]">STUDIO</span>
               </span>
-              <span className="text-[10px] font-mono tracking-widest text-muted-foreground uppercase">
+              <span className="hidden min-[340px]:block text-[10px] font-mono tracking-widest text-muted-foreground uppercase truncate">
                 {t("common.brandTagline")}
               </span>
             </div>
@@ -237,8 +253,9 @@ export function Navbar({
           </div>
 
           {/* Right Action Icons & Controls */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Language Switcher */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Language Switcher (compact icon on mobile, pill on larger screens) */}
+            <LanguageSwitcher variant="icon" className="sm:hidden" />
             <div className="hidden sm:block">
               <LanguageSwitcher />
             </div>
@@ -250,7 +267,7 @@ export function Navbar({
             {onSearchClick ? (
               <button
                 onClick={onSearchClick}
-                className="flex size-9 items-center justify-center rounded-xl border border-border/80 bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
+                className="flex size-8 sm:size-9 items-center justify-center rounded-xl border border-border/80 bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
                 aria-label={t("nav.searchCatalogAria")}
               >
                 <Search className="size-4" />
@@ -258,7 +275,7 @@ export function Navbar({
             ) : (
               <Link
                 href="/shop"
-                className="flex size-9 items-center justify-center rounded-xl border border-border/80 bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
+                className="flex size-8 sm:size-9 items-center justify-center rounded-xl border border-border/80 bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
                 aria-label={t("nav.searchCatalogAria")}
               >
                 <Search className="size-4" />
@@ -268,12 +285,12 @@ export function Navbar({
             {/* Cart Trigger */}
             <button
               onClick={onCartClick || openDrawer}
-              className="relative flex size-9 items-center justify-center rounded-xl border border-border/80 bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
+              className="relative flex size-8 sm:size-9 items-center justify-center rounded-xl border border-border/80 bg-background/80 hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
               aria-label={t("nav.cartAria", { count: activeCartCount })}
             >
               <ShoppingBag className="size-4" />
               {activeCartCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[#FF6B35] text-[10px] font-bold text-white shadow-sm transition-transform duration-300 scale-100">
+                <span className="absolute -top-1 -end-1 flex size-5 items-center justify-center rounded-full bg-[#FF6B35] text-[10px] font-bold text-white shadow-sm transition-transform duration-300 scale-100">
                   {activeCartCount}
                 </span>
               )}
@@ -281,7 +298,7 @@ export function Navbar({
 
             {/* User Account / Profile Dropdown */}
             {isAuthenticated ? (
-              <div className="relative hidden sm:block">
+              <div className="relative block">
                 <button
                   type="button"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -292,10 +309,10 @@ export function Navbar({
                   <span className="flex size-5 items-center justify-center rounded-md bg-[#FF6B35]/15 text-[11px] font-bold text-[#FF6B35]">
                     {userInitial}
                   </span>
-                  <span className="text-xs font-semibold max-w-[90px] truncate">
+                  <span className="hidden sm:inline text-xs font-semibold max-w-[90px] truncate">
                     {userDisplayName}
                   </span>
-                  <ChevronDown className="size-3 text-muted-foreground" />
+                  <ChevronDown className="hidden sm:block size-3 text-muted-foreground" />
                 </button>
 
                 {/* Floating User Menu */}
@@ -383,11 +400,12 @@ export function Navbar({
             ) : (
               <Link
                 href="/auth/login"
-                className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-xl border border-border/80 bg-background/80 hover:bg-muted/80 text-xs font-semibold text-foreground transition-all focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
+                className="flex items-center justify-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-xl border border-border/80 bg-background/80 hover:bg-muted/80 text-xs font-semibold text-foreground transition-all focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
                 aria-label={t("auth.loginButton")}
+                title={t("auth.loginButton")}
               >
-                <User className="size-3.5 text-[#FF6B35]" />
-                <span>{t("auth.loginButton")}</span>
+                <User className="size-4 sm:size-3.5 text-[#FF6B35]" />
+                <span className="hidden sm:inline">{t("auth.loginButton")}</span>
               </Link>
             )}
 
@@ -405,10 +423,12 @@ export function Navbar({
 
             {/* Mobile Hamburger Button */}
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden flex size-9 items-center justify-center rounded-xl border border-border/80 text-foreground hover:bg-muted transition-colors focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
+              type="button"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="lg:hidden flex size-8 sm:size-9 items-center justify-center rounded-xl border border-border/80 text-foreground hover:bg-muted transition-colors focus-visible:ring-2 focus-visible:ring-[#FF6B35]"
               aria-label={mobileMenuOpen ? t("nav.menuCloseAria") : t("nav.menuOpenAria")}
               aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation-menu"
             >
               {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
@@ -418,7 +438,10 @@ export function Navbar({
 
       {/* Animated Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 top-[88px] z-50 bg-[#111318]/95 dark:bg-[#0B0D11]/98 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top-4 flex flex-col p-6 overflow-y-auto">
+        <div
+          id="mobile-navigation-menu"
+          style={{ top: `${headerHeight}px` }}
+          className="lg:hidden fixed inset-x-0 bottom-0 z-50 bg-[#111318]/95 dark:bg-[#0B0D11]/98 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top-4 flex flex-col p-5 sm:p-6 overflow-y-auto overscroll-contain">
           {/* Mobile Global Controls: Language & Theme */}
           <div className="flex flex-col gap-2.5 pb-4 border-b border-white/10 mb-4">
             <LanguageSwitcher variant="mobile" />
@@ -525,7 +548,7 @@ export function Navbar({
             })}
           </div>
 
-          <div className="mt-8 pt-6 border-t border-white/10 flex flex-col gap-3">
+          <div className="mt-6 pt-5 border-t border-white/10 flex flex-col gap-3">
             <Button
               variant="default"
               size="lg"

@@ -95,6 +95,14 @@ export const adminCreateQuoteSchema = z.object({
   status: z.enum(["draft", "sent"]).default("sent"),
 });
 
+export const adminRejectRequestSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Rejection reason must be at least 3 characters")
+    .max(1000, "Rejection reason cannot exceed 1000 characters"),
+});
+
 export const acceptQuoteSchema = z
   .object({
     address_id: z.string().uuid("Invalid address ID format").optional(),
@@ -119,6 +127,7 @@ export const rejectQuoteSchema = z.object({
 
 export type CreateCustomPrintRequestInput = z.infer<typeof createCustomPrintRequestSchema>;
 export type AdminCreateQuoteInput = z.infer<typeof adminCreateQuoteSchema>;
+export type AdminRejectRequestInput = z.infer<typeof adminRejectRequestSchema>;
 export type AcceptQuoteInput = z.infer<typeof acceptQuoteSchema>;
 export type RejectQuoteInput = z.infer<typeof rejectQuoteSchema>;
 

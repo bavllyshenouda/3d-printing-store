@@ -10,16 +10,15 @@ export async function GET(request: Request, context: RouteContext) {
   try {
     const { id: requestId, fileId } = await context.params;
 
-    let auth = await requireCustomer(request);
-    let isAdmin = false;
+    // Resolve admin FIRST (see api/custom-prints/[id]/route.ts). Checking
+    // requireCustomer first would leave isAdmin = false for admins, causing the
+    // ownership check below to reject them with 403 and break file preview/download.
+    const adminAuth = await requireAdmin(request);
+    const isAdmin = adminAuth.authorized;
+    const auth = isAdmin ? adminAuth : await requireCustomer(request);
 
     if (!auth.authorized) {
-      const adminAuth = await requireAdmin(request);
-      if (!adminAuth.authorized) {
-        return auth.response;
-      }
-      isAdmin = true;
-      auth = adminAuth;
+      return auth.response;
     }
 
     const { user, supabase } = auth;

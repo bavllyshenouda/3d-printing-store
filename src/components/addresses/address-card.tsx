@@ -58,7 +58,7 @@ export function AddressCard({
     <div
       onClick={selectable && onSelect ? () => onSelect(address) : undefined}
       className={cn(
-        "relative rounded-2xl border p-5 transition-all text-left group",
+        "relative rounded-2xl border p-5 transition-all text-start group",
         selectable && "cursor-pointer hover:border-[#FF6B35]/70 hover:shadow-sm",
         isSelected
           ? "border-[#FF6B35] bg-[#FF6B35]/5 ring-2 ring-[#FF6B35]/20 shadow-xs"

@@ -99,7 +99,7 @@ export function PaymentStatusCard({
   const verifiedDate = formatTimestamp(payment.verified_at);
 
   return (
-    <div className={cn("space-y-4 text-left", className)}>
+    <div className={cn("space-y-4 text-start", className)}>
       {/* 1. Status Banner */}
       <div
         className={cn(
@@ -143,7 +143,7 @@ export function PaymentStatusCard({
         </div>
 
         {/* Authoritative Total Callout */}
-        <div className="rounded-2xl bg-card border border-border/80 p-3.5 sm:p-4 text-left sm:text-right shrink-0 shadow-2xs self-start sm:self-auto min-w-[140px]">
+        <div className="rounded-2xl bg-card border border-border/80 p-3.5 sm:p-4 text-start sm:text-end shrink-0 shadow-2xs self-start sm:self-auto min-w-[140px]">
           <span className="text-[10px] uppercase font-bold text-muted-foreground block">
             {t("payment.authoritativeTotal")}
           </span>

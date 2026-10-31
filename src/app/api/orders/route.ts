@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireCustomer } from "@/lib/auth/customer";
+import { resolveOrderItemImages } from "@/lib/orders/order-item-image";
 
 export async function GET(request: Request) {
   try {
@@ -65,11 +66,20 @@ export async function GET(request: Request) {
     const totalCount = count || 0;
     const totalPages = Math.ceil(totalCount / limit);
 
+    // Resolve line-item images (see /api/orders/[id]) so the orders list thumbnails
+    // never pass a raw private Storage path to next/image.
+    const ordersWithImages = await Promise.all(
+      (orders || []).map(async (order) => ({
+        ...order,
+        items: await resolveOrderItemImages(supabase, order.items),
+      }))
+    );
+
     return NextResponse.json(
       {
         success: true,
         data: {
-          orders: orders || [],
+          orders: ordersWithImages,
           pagination: {
             page,
             limit,

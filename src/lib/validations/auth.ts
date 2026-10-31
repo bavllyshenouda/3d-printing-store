@@ -37,9 +37,13 @@ export const registerSchema = z.object({
     .min(1, "Last name cannot be empty.")
     .max(100, "Last name cannot exceed 100 characters."),
   phone: z
-    .union([egyptianPhoneSchema, z.literal(""), z.null()])
-    .optional()
-    .transform((val) => (val === "" || val === null ? undefined : val)),
+    .string()
+    .trim()
+    .min(1, "Phone number is required.")
+    .regex(
+      EGYPTIAN_PHONE_REGEX,
+      "Invalid Egyptian phone number. Must be exactly 11 digits starting with 010, 011, 012, or 015."
+    ),
 });
 
 export const loginSchema = z.object({

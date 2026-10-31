@@ -1,10 +1,34 @@
 import { NextResponse } from "next/server";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/auth/admin";
 import {
   productSchema,
   productQuerySchema,
   slugify,
 } from "@/lib/validations/product";
+import { Database } from "@/types/database";
+
+// Resolve a slug that does not collide with an existing product, appending -2, -3, ...
+// Never overwrites another product's slug; preserves existing IDs/relationships.
+async function resolveUniqueProductSlug(
+  supabase: SupabaseClient<Database>,
+  baseSlug: string
+): Promise<string> {
+  let candidate = baseSlug;
+  let counter = 1;
+  while (counter <= 50) {
+    const { data } = await supabase
+      .from("products")
+      .select("id")
+      .eq("slug", candidate)
+      .maybeSingle();
+    if (!data) return candidate;
+    counter += 1;
+    candidate = `${baseSlug}-${counter}`;
+  }
+  // Pathological fallback (extremely unlikely): time-based suffix.
+  return `${baseSlug}-${Date.now().toString(36)}`;
+}
 
 export async function GET(request: Request) {
   try {
@@ -157,9 +181,9 @@ export async function POST(request: Request) {
     }
 
     const input = parseResult.data;
-    const slug = input.slug || slugify(input.name);
+    const baseSlug = input.slug || slugify(input.name);
 
-    if (!slug) {
+    if (!baseSlug) {
       return NextResponse.json(
         {
           success: false,
@@ -168,6 +192,9 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Duplicate-safe: derive a unique slug so we never overwrite another product.
+    const slug = await resolveUniqueProductSlug(supabase, baseSlug);
 
     // Check if category_id exists if provided
     if (input.category_id) {

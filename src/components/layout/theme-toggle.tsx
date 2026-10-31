@@ -94,7 +94,7 @@ export function ThemeToggle({
       type="button"
       onClick={toggleTheme}
       className={cn(
-        "group relative flex size-9 items-center justify-center rounded-xl border border-border/80 bg-background/80 hover:bg-muted/80 text-foreground backdrop-blur-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B35]",
+        "group relative flex size-8 sm:size-9 items-center justify-center rounded-xl border border-border/80 bg-background/80 hover:bg-muted/80 text-foreground backdrop-blur-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B35]",
         className
       )}
       title={
@@ -111,9 +111,9 @@ export function ThemeToggle({
       aria-label={
         isMounted
           ? resolvedTheme === "dark"
-            ? "Switch to Light Mode"
-            : "Switch to Dark Mode"
-          : "Toggle theme"
+            ? t("nav.themeToggleToLight")
+            : t("nav.themeToggleToDark")
+          : t("nav.toggleTheme")
       }
     >
       <div className="relative size-4">

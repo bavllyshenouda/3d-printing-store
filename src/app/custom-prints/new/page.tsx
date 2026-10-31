@@ -12,7 +12,7 @@ export default function NewCustomPrintPage() {
   return (
     <div className="py-8 sm:py-12 bg-background min-h-[85vh]">
       <Container size="default">
-        <div className="mb-8 text-left">
+        <div className="mb-8 text-start">
           <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             Custom 3D Print Request
           </h1>

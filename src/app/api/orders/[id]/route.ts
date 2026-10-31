@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireCustomer } from "@/lib/auth/customer";
+import { resolveOrderItemImages } from "@/lib/orders/order-item-image";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -69,12 +70,18 @@ export async function GET(request: Request, context: RouteContext) {
         )
       : [];
 
+    // Resolve line-item images so next/image never receives a raw Storage path:
+    // absolute URLs pass through, private custom-print paths become short-lived
+    // signed URLs, and invalid/missing values fall back to null.
+    const items = await resolveOrderItemImages(supabase, order.items);
+
     return NextResponse.json(
       {
         success: true,
         data: {
           order: {
             ...order,
+            items,
             shipping_events: shippingEvents,
           },
         },

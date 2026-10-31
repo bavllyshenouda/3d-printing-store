@@ -160,7 +160,7 @@ export function AdminOrderDetailsView({ orderId }: AdminOrderDetailsViewProps) {
                     "bg-muted text-muted-foreground"
                 )}
               >
-                {order.status.replace(/_/g, " ")}
+                {(order.status || "unknown").replace(/_/g, " ")}
               </span>
             </div>
             <p className="text-xs text-muted-foreground font-mono mt-0.5">
@@ -488,7 +488,7 @@ export function AdminOrderDetailsView({ orderId }: AdminOrderDetailsViewProps) {
                       "bg-muted text-muted-foreground"
                   )}
                 >
-                  {order.payment_status.replace(/_/g, " ")}
+                  {(order.payment_status || "pending").replace(/_/g, " ")}
                 </span>
               </div>
 

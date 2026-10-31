@@ -43,7 +43,7 @@ export function PaymentMethodInstructions({
     return (
       <div
         className={cn(
-          "rounded-3xl border border-emerald-500/30 bg-emerald-500/5 p-6 space-y-4 text-left",
+          "rounded-3xl border border-emerald-500/30 bg-emerald-500/5 p-6 space-y-4 text-start",
           className
         )}
       >
@@ -79,7 +79,7 @@ export function PaymentMethodInstructions({
     return (
       <div
         className={cn(
-          "rounded-3xl border border-[#FF6B35]/30 bg-[#FF6B35]/5 p-6 space-y-5 text-left",
+          "rounded-3xl border border-[#FF6B35]/30 bg-[#FF6B35]/5 p-6 space-y-5 text-start",
           className
         )}
       >
@@ -188,7 +188,7 @@ export function PaymentMethodInstructions({
     return (
       <div
         className={cn(
-          "rounded-3xl border border-red-500/30 bg-red-500/5 p-6 space-y-5 text-left",
+          "rounded-3xl border border-red-500/30 bg-red-500/5 p-6 space-y-5 text-start",
           className
         )}
       >
@@ -295,7 +295,7 @@ export function PaymentMethodInstructions({
   return (
     <div
       className={cn(
-        "rounded-3xl border border-blue-500/30 bg-blue-500/5 p-6 space-y-4 text-left",
+        "rounded-3xl border border-blue-500/30 bg-blue-500/5 p-6 space-y-4 text-start",
         className
       )}
     >

@@ -38,8 +38,8 @@ export function CreateQuoteModal({
       setDescription(
         `Precision industrial 3D printing for: ${request.title}. 0.16mm layer height, 4 walls, 25% gyroid infill.`
       );
-      setMaterial(request.material || "PETG");
-      setColor(request.color || "Black");
+      setMaterial(request.preferred_material || "PETG");
+      setColor(request.preferred_color || "Black");
       setQuantity(String(request.quantity || 1));
       setUnitPrice("250");
       setEstimatedDays("3");

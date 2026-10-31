@@ -111,7 +111,7 @@ export function CheckoutPaymentStep({
               key={opt.id}
               onClick={() => onSelectPaymentMethod(opt.id)}
               className={cn(
-                "relative rounded-2xl border p-5 cursor-pointer transition-all text-left flex flex-col justify-between group",
+                "relative rounded-2xl border p-5 cursor-pointer transition-all text-start flex flex-col justify-between group",
                 isSelected
                   ? "border-[#FF6B35] bg-[#FF6B35]/5 ring-2 ring-[#FF6B35]/20 shadow-xs"
                   : "border-border/80 bg-card hover:bg-muted/10 hover:border-border"

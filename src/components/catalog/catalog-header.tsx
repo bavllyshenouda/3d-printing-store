@@ -15,7 +15,7 @@ export function CatalogHeader() {
       <div className="absolute inset-0 bg-layer-lines opacity-40 pointer-events-none" />
 
       {/* Subtle radial glow */}
-      <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 size-96 rounded-full bg-[#FF6B35]/5 blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 -translate-y-1/2 size-96 rounded-full bg-[#FF6B35]/5 blur-3xl pointer-events-none" />
 
       <Container size="xl" className="relative z-10">
         <div className="flex flex-col items-center text-center max-w-3xl mx-auto">

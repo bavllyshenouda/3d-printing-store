@@ -101,7 +101,7 @@ export function FileUploader({
     f.type.startsWith("image/") || /\.(png|jpe?g|webp)$/i.test(f.name);
 
   return (
-    <div className={cn("space-y-4 text-left", className)}>
+    <div className={cn("space-y-4 text-start", className)}>
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}

@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 const STATUS_FILTERS = [
   { id: "", label: "All Requests" },
   { id: "submitted", label: "Awaiting Quote" },
-  { id: "quoted", label: "Quote Sent" },
+  { id: "quote_sent", label: "Quote Sent" },
   { id: "accepted", label: "Accepted" },
   { id: "in_production", label: "In Production" },
   { id: "completed", label: "Completed" },
@@ -171,7 +171,7 @@ export function CustomPrintsTable() {
                       Qty: {req.quantity}
                     </span>
                     <div className="text-[11px] text-muted-foreground font-mono">
-                      {req.material || "Standard"} • {req.color || "Any"}
+                      {req.preferred_material || "Standard"} • {req.preferred_color || "Any"}
                     </div>
                   </td>
 
@@ -205,7 +205,7 @@ export function CustomPrintsTable() {
                         "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase",
                         req.status === "submitted" &&
                           "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
-                        req.status === "quoted" &&
+                        req.status === "quote_sent" &&
                           "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20",
                         req.status === "accepted" &&
                           "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",

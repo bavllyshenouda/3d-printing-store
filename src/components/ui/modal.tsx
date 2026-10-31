@@ -63,7 +63,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? "modal-title" : undefined}
@@ -79,14 +79,15 @@ export function Modal({
       {/* Modal Surface */}
       <div
         className={cn(
-          "relative w-full rounded-2xl border border-border/80 bg-white dark:bg-[#1A1D24] shadow-2xl transition-all duration-300 animate-in fade-in zoom-in-95",
+          "relative flex w-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-white dark:bg-[#1A1D24] shadow-2xl transition-all duration-300 animate-in fade-in zoom-in-95",
+          "max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)]",
           maxWidthMap[maxWidth],
           className
         )}
       >
         {/* Header */}
         {(title || description) && (
-          <div className="flex items-start justify-between border-b border-border/60 p-6 pb-4">
+          <div className="flex shrink-0 items-start justify-between border-b border-border/60 p-6 pb-4">
             <div className="space-y-1">
               {title && (
                 <h2
@@ -114,11 +115,11 @@ export function Modal({
         )}
 
         {/* Content Body */}
-        <div className="p-6">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">{children}</div>
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 border-t border-border/60 bg-muted/20 px-6 py-4 rounded-b-2xl">
+          <div className="flex shrink-0 items-center justify-end gap-3 border-t border-border/60 bg-muted/20 px-6 py-4 rounded-b-2xl">
             {footer}
           </div>
         )}

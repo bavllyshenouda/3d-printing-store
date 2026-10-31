@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 export default function RegisterPage() {
   return (
     <AuthSplitLayout
-      title="Create Account"
-      subtitle="Join Egypt's precision 3D printing studio. Access instant slicing quotes, multi-material FDM, and fast delivery."
+      titleKey="auth.registerTitle"
+      subtitleKey="auth.registerSubtitle"
     >
       <RegisterForm />
     </AuthSplitLayout>

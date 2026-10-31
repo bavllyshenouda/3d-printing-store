@@ -10,16 +10,16 @@ export async function GET(request: Request, context: RouteContext) {
   try {
     const { id: requestId } = await context.params;
 
-    let auth = await requireCustomer(request);
-    let isAdmin = false;
+    // Resolve admin FIRST. An admin is also an authenticated user, so calling
+    // requireCustomer first would succeed and leave isAdmin = false, which scopes
+    // the query below to the admin's own user_id and makes every customer request
+    // return 404 ("Request Not Found"). Admins must be able to read any request.
+    const adminAuth = await requireAdmin(request);
+    const isAdmin = adminAuth.authorized;
+    const auth = isAdmin ? adminAuth : await requireCustomer(request);
 
     if (!auth.authorized) {
-      const adminAuth = await requireAdmin(request);
-      if (!adminAuth.authorized) {
-        return auth.response;
-      }
-      isAdmin = true;
-      auth = adminAuth;
+      return auth.response;
     }
 
     const { user, supabase } = auth;
@@ -29,6 +29,13 @@ export async function GET(request: Request, context: RouteContext) {
       .select(
         `
         *,
+        profile:profiles (
+          id,
+          first_name,
+          last_name,
+          email,
+          phone
+        ),
         files:custom_print_files (
           id,
           storage_path,

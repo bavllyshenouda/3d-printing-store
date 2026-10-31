@@ -17,6 +17,7 @@ import { OrderStatusBadge, PaymentStatusBadge } from "./order-status-badge";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/context";
 import type { Order, OrderItem } from "@/types/database";
+import { isRenderableImageUrl } from "@/lib/orders/image-url";
 
 export interface OrderWithItems extends Order {
   items?: OrderItem[];
@@ -68,7 +69,7 @@ export function OrderCard({ order, className }: OrderCardProps) {
         </div>
 
         {/* Total Price */}
-        <div className="text-left sm:text-right">
+        <div className="text-start sm:text-end">
           <span className="text-[10px] uppercase font-bold text-muted-foreground block">
             {t("orders.total")}
           </span>
@@ -88,7 +89,7 @@ export function OrderCard({ order, className }: OrderCardProps) {
               className="relative size-12 rounded-xl overflow-hidden bg-muted/60 border border-border/60 shrink-0"
               title={`${it.product_name} (${it.color})`}
             >
-              {it.product_image_url ? (
+              {isRenderableImageUrl(it.product_image_url) ? (
                 <Image
                   src={it.product_image_url}
                   alt={it.product_name}

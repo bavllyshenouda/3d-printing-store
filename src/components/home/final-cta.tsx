@@ -43,6 +43,7 @@ export function FinalCta() {
                 iconLeft={<UploadCloud className="size-5" />}
                 iconRight={<ArrowRight className="size-4 rtl:rotate-180" />}
                 asChild
+                className="w-full sm:w-auto h-auto min-h-12 py-3"
               >
                 <Link href="/custom-prints">
                   {t("finalCta.ctaUpload")}
@@ -54,7 +55,7 @@ export function FinalCta() {
                 size="lg"
                 iconLeft={<Box className="size-4 text-[#FF6B35]" />}
                 asChild
-                className="border-white/20 hover:bg-white/10 text-white"
+                className="border-white/20 hover:bg-white/10 text-white w-full sm:w-auto h-auto min-h-12 py-3"
               >
                 <Link href="/products">
                   {t("finalCta.ctaCatalog")}

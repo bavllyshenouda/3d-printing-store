@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import { toast } from "@/components/ui/toast";
 import { useTranslation } from "@/lib/i18n/context";
+import { useAuth } from "@/lib/auth/context";
 
 export interface CartItemProduct {
   id: string;
@@ -79,6 +80,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const pendingRequestsRef = useRef<Set<string>>(new Set());
 
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+
+  // Mirror of the current user id, used to discard stale in-flight cart responses after
+  // a logout or account switch so the previous user's cart can never be restored.
+  const currentUserIdRef = useRef<string | null>(userId);
+
+  // When the authenticated user changes (login, logout, account switch) reset the cart
+  // DURING render, so the previous user's items vanish before the browser paints -- no
+  // stale flash in the header count, mini-cart or cart page. This is React's recommended
+  // "adjust state when a value changes" pattern (guard + setState while rendering).
+  const [trackedUserId, setTrackedUserId] = useState<string | null>(userId);
+  if (userId !== trackedUserId) {
+    setTrackedUserId(userId);
+    setItems([]);
+    setSummary(defaultSummary);
+    setError(null);
+    setIsLoading(true);
+  }
 
   // Helper to recompute local summary optimistically
   const computeSummary = (cartItems: CartItem[]): CartSummary => {
@@ -102,10 +122,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
   };
 
-  // Fetch cart data from authoritative backend
+  // Fetch cart data from authoritative backend.
+  // A request token (the user id at call time) guards against stale responses: if the
+  // authenticated user changed (logout / account switch) while this request was in
+  // flight, its result is discarded so it cannot restore the previous user's cart.
   const fetchCart = useCallback(async () => {
+    const requestUserId = currentUserIdRef.current;
     try {
       const res = await fetch("/api/cart");
+
+      if (currentUserIdRef.current !== requestUserId) return;
 
       if (res.status === 401) {
         // Customer unauthenticated: clear cart
@@ -117,6 +143,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       const json = await res.json();
 
+      if (currentUserIdRef.current !== requestUserId) return;
+
       if (!res.ok || !json.success) {
         throw new Error(json.error || "Failed to fetch cart");
       }
@@ -125,17 +153,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setSummary(json.data.summary || defaultSummary);
       setError(null);
     } catch (err) {
+      if (currentUserIdRef.current !== requestUserId) return;
       console.error("Cart retrieval failure:", err);
       setError(err instanceof Error ? err.message : "Error fetching cart");
     } finally {
-      setIsLoading(false);
+      if (currentUserIdRef.current === requestUserId) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
-  // Initial load & listen to window events
+  // (Re)load the cart whenever the authenticated user changes. The render-phase reset
+  // above already cleared the previous user's items; here we sync the request token and
+  // fetch the new user's cart (guests get an empty cart via the 401 path).
   useEffect(() => {
+    currentUserIdRef.current = userId;
     fetchCart();
+  }, [userId, fetchCart]);
 
+  // Listen for cart mutations dispatched elsewhere in the app.
+  useEffect(() => {
     const handleCartUpdated = () => {
       fetchCart();
     };

@@ -9,16 +9,23 @@ import { cn } from "@/lib/utils";
 
 export interface AuthSplitLayoutProps {
   children: React.ReactNode;
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
+  titleKey?: string;
+  subtitleKey?: string;
 }
 
 export function AuthSplitLayout({
   children,
   title,
   subtitle,
+  titleKey,
+  subtitleKey,
 }: AuthSplitLayoutProps) {
   const { t, isRTL } = useTranslation();
+
+  const resolvedTitle = titleKey ? t(titleKey) : title;
+  const resolvedSubtitle = subtitleKey ? t(subtitleKey) : subtitle;
 
   const benefits = [
     t("auth.feature1"),
@@ -30,7 +37,7 @@ export function AuthSplitLayout({
     <div className="min-h-[calc(100vh-140px)] flex items-center justify-center py-10 px-4 sm:px-6 bg-background">
       <div className="w-full max-w-5xl rounded-3xl border border-border/70 bg-card overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-12">
         {/* Left/Start Column: Studio Aesthetic Showcase Panel */}
-        <div className="lg:col-span-5 relative bg-[#111318] text-white p-8 sm:p-10 flex flex-col justify-between overflow-hidden">
+        <div className="lg:col-span-5 order-2 lg:order-1 relative bg-[#111318] text-white p-8 sm:p-10 flex flex-col justify-between overflow-hidden">
           {/* Subtle Layer Lines & Radial Orange Glow */}
           <div className="absolute inset-0 bg-studio-grid opacity-25 pointer-events-none" />
           <div
@@ -94,14 +101,14 @@ export function AuthSplitLayout({
         </div>
 
         {/* Right/End Column: Authentication Form */}
-        <div className="lg:col-span-7 p-6 sm:p-10 md:p-12 flex flex-col justify-center bg-card">
+        <div className="lg:col-span-7 order-1 lg:order-2 p-6 sm:p-10 md:p-12 flex flex-col justify-center bg-card">
           <div className="max-w-md w-full mx-auto space-y-6">
             <div className="space-y-2">
               <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                {title}
+                {resolvedTitle}
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {subtitle}
+                {resolvedSubtitle}
               </p>
             </div>
 
