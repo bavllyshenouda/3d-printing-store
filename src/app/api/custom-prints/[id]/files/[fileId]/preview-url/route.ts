@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireCustomer } from "@/lib/auth/customer";
-import { requireAdmin } from "@/lib/auth/admin";
+import { requireCustomerOrAdmin } from "@/lib/auth";
 
 interface RouteContext {
   params: Promise<{ id: string; fileId: string }>;
@@ -10,18 +9,12 @@ export async function GET(request: Request, context: RouteContext) {
   try {
     const { id: requestId, fileId } = await context.params;
 
-    // Resolve admin FIRST (see api/custom-prints/[id]/route.ts). Checking
-    // requireCustomer first would leave isAdmin = false for admins, causing the
-    // ownership check below to reject them with 403 and break file preview/download.
-    const adminAuth = await requireAdmin(request);
-    const isAdmin = adminAuth.authorized;
-    const auth = isAdmin ? adminAuth : await requireCustomer(request);
-
+    const auth = await requireCustomerOrAdmin(request);
     if (!auth.authorized) {
       return auth.response;
     }
 
-    const { user, supabase } = auth;
+    const { user, supabase, isAdmin } = auth;
 
     // Verify request ownership
     const { data: printRequest, error: requestError } = await supabase

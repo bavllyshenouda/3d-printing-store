@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/auth/context";
 import { useTranslation } from "@/lib/i18n/context";
 import { GoogleAuthButton } from "@/components/auth/google-auth-button";
 import { resolveAuthMessage } from "@/lib/auth/error-messages";
+import { safeInternalPath } from "@/lib/auth/safe-redirect";
 
 export function LoginForm() {
   const router = useRouter();
@@ -28,10 +29,7 @@ export function LoginForm() {
 
   const redirectParam = searchParams.get("redirect");
   const authErrorParam = searchParams.get("auth_error");
-  const safeRedirect =
-    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
-      ? redirectParam
-      : "/profile";
+  const safeRedirect = safeInternalPath(redirectParam, "/profile");
 
   // Redirect if already logged in
   React.useEffect(() => {

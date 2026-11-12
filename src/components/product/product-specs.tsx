@@ -8,8 +8,8 @@ import {
   Clock,
   Palette,
   Boxes,
-  CheckCircle2,
   Sliders,
+  Maximize2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ProductDetail } from "@/lib/data/product-detail";
@@ -73,6 +73,20 @@ export function ProductSpecs({ product, className }: ProductSpecsProps) {
       value: localizedCategory,
       icon: <Boxes className="size-4 text-[#FF6B35]" />,
     },
+    ...(product.width || product.height
+      ? [
+          {
+            label: t("product.dimensions") || "Dimensions",
+            value: [
+              product.width ? `W: ${product.width} cm` : "",
+              product.height ? `H: ${product.height} cm` : "",
+            ]
+              .filter(Boolean)
+              .join(" × "),
+            icon: <Maximize2 className="size-4 text-[#FF6B35]" />,
+          },
+        ]
+      : []),
   ];
 
   return (

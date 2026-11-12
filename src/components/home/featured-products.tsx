@@ -12,7 +12,9 @@ import { Container } from "@/components/layout/container";
 import { Grid } from "@/components/layout/grid";
 import { toast } from "@/components/ui/toast";
 import { HomepageProduct } from "@/lib/data/homepage";
+import { LOW_STOCK_THRESHOLD, formatUnitsLeft } from "@/lib/constants/inventory";
 import { useTranslation } from "@/lib/i18n/context";
+import { cn } from "@/lib/utils";
 
 export interface FeaturedProductsProps {
   products: HomepageProduct[];
@@ -20,7 +22,7 @@ export interface FeaturedProductsProps {
 
 export function FeaturedProducts({ products }: FeaturedProductsProps) {
   const [selectedProduct, setSelectedProduct] = useState<HomepageProduct | null>(null);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const handleAddToCart = (productId: string, color?: string) => {
     const item = products.find((p) => p.id === productId);
@@ -93,6 +95,8 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
                   availableColors={product.available_colors || ["Black", "Orange", "Silver"]}
                   categoryName={product.category?.name || "General Print"}
                   isFeatured={product.is_featured}
+                  width={product.width}
+                  height={product.height}
                   onAddToCart={handleAddToCart}
                   onQuickView={handleQuickView}
                 />
@@ -157,8 +161,19 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
               </div>
               <div className="rounded-xl border border-border p-3 bg-muted/20">
                 <span className="text-muted-foreground block text-[10px]">{t("featured.modalStockStatus")}</span>
-                <span className="font-bold text-emerald-500">
-                  {selectedProduct.stock > 0 ? `${selectedProduct.stock} ${t("common.inStock")}` : t("common.onDemand")}
+                <span
+                  className={cn(
+                    "font-bold",
+                    selectedProduct.stock <= 0
+                      ? "text-red-500"
+                      : selectedProduct.stock <= LOW_STOCK_THRESHOLD
+                      ? "text-amber-500"
+                      : "text-emerald-500"
+                  )}
+                >
+                  {selectedProduct.stock > 0
+                    ? formatUnitsLeft(selectedProduct.stock, t, locale)
+                    : t("common.soldOut") || t("common.onDemand")}
                 </span>
               </div>
               <div className="rounded-xl border border-border p-3 bg-muted/20">

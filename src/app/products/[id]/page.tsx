@@ -1,8 +1,7 @@
 import React from "react";
 import { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { Box, ArrowLeft, ArrowRight } from "lucide-react";
+import { Box } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -91,13 +90,15 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         {/* Main 2-Column Product Showcase */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
           {/* Left Column: Interactive Image Gallery */}
-          <div className="lg:col-span-7 sticky top-24">
+          <div className="lg:col-span-7 lg:sticky lg:top-24">
             <ProductGallery
               images={product.images}
               productName={product.name}
               material={product.material}
               isFeatured={product.is_featured}
               stock={product.stock}
+              width={product.width}
+              height={product.height}
             />
           </div>
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireCustomer } from "@/lib/auth/customer";
 import { acceptQuoteSchema } from "@/lib/validations/custom-print";
+import { getShippingFee } from "@/lib/constants/governorates";
 
 interface RouteContext {
   params: Promise<{ id: string; quoteId: string }>;
@@ -37,7 +38,6 @@ export async function POST(request: Request, context: RouteContext) {
       address_id,
       address,
       payment_method,
-      shipping_fee = 50,
       address_notes,
     } = parseResult.data;
 
@@ -97,6 +97,9 @@ export async function POST(request: Request, context: RouteContext) {
       resolvedNotes = address_notes || address.notes || null;
     }
 
+    // 3.5. Compute server-authoritative shipping fee based on resolved governorate
+    const shippingFee = getShippingFee(resolvedGovernorate);
+
     // 4. Invoke atomic RPC to accept quote and create order
     // Validates quote ownership, expiration, status, creates order and order_items atomically.
     // Idempotent: If quote was already accepted, returns existing order without creating duplicates.
@@ -116,7 +119,7 @@ export async function POST(request: Request, context: RouteContext) {
         p_apartment: resolvedApartment,
         p_address_notes: resolvedNotes,
         p_payment_method: payment_method,
-        p_shipping_fee: shipping_fee,
+        p_shipping_fee: shippingFee,
       }
     );
 

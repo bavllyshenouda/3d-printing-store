@@ -105,7 +105,6 @@ export function PaymentsTable() {
               <option value="instapay">InstaPay</option>
               <option value="vodafone_cash">Vodafone Cash</option>
               <option value="cod">Cash on Delivery</option>
-              <option value="online">Online Card</option>
             </select>
           </>
         }

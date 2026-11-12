@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireCustomer } from "@/lib/auth/customer";
 import { checkoutSchema } from "@/lib/validations/order";
+import { getShippingFee } from "@/lib/constants/governorates";
 
 export async function POST(request: Request) {
   try {
@@ -32,8 +33,6 @@ export async function POST(request: Request) {
       address,
       save_address,
       payment_method,
-      shipping_fee = 0,
-      discount_amount = 0,
       address_notes,
     } = parseResult.data;
 
@@ -145,7 +144,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // 5. Execute atomic checkout transaction via PostgreSQL RPC function
+    // 5. Server-authoritative shipping fee and discount calculation
+    const shippingFee = getShippingFee(resolvedGovernorate);
+
+    // TODO(db): Validate and apply coupons/discounts inside the database RPC once a coupon system is implemented
+    const discountAmount = 0;
+
+    // 6. Execute atomic checkout transaction via PostgreSQL RPC function
     // All prices, inventory locks (FOR UPDATE), deductions, order and line-item creation,
     // and cart deletion execute inside a single atomic database transaction.
     const { data: checkoutResult, error: checkoutError } = await supabase.rpc(
@@ -163,8 +168,8 @@ export async function POST(request: Request) {
         p_apartment: resolvedApartment,
         p_address_notes: resolvedNotes,
         p_payment_method: payment_method,
-        p_shipping_fee: shipping_fee,
-        p_discount_amount: discount_amount,
+        p_shipping_fee: shippingFee,
+        p_discount_amount: discountAmount,
       }
     );
 

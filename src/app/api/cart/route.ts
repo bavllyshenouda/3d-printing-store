@@ -231,11 +231,11 @@ export async function POST(request: Request) {
     const colors = Array.isArray(product.available_colors)
       ? product.available_colors
       : [];
-    const colorMatches = colors.some(
-      (c) => c.toLowerCase() === color.toLowerCase()
+    const matchedColor = colors.find(
+      (c) => c.toLowerCase() === color.trim().toLowerCase()
     );
 
-    if (colors.length > 0 && !colorMatches) {
+    if (colors.length > 0 && !matchedColor) {
       return NextResponse.json(
         {
           success: false,
@@ -246,6 +246,9 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Store canonical color string from available_colors if matched, otherwise trimmed user input
+    const canonicalColor = matchedColor || color.trim();
 
     // 4. Validate inventory / stock
     if (product.stock <= 0) {
@@ -259,12 +262,13 @@ export async function POST(request: Request) {
     }
 
     // 5. Check if entry for (user_id, product_id, color) already exists in cart
+    // TODO(db): unique constraint on (user_id, product_id, color) plus upsert.
     const { data: existingItem, error: existingError } = await supabase
       .from("cart_items")
       .select("id, quantity")
       .eq("user_id", user.id)
       .eq("product_id", product_id)
-      .eq("color", color)
+      .eq("color", canonicalColor)
       .maybeSingle();
 
     if (existingError) {
@@ -340,7 +344,7 @@ export async function POST(request: Request) {
       .insert({
         user_id: user.id,
         product_id,
-        color,
+        color: canonicalColor,
         quantity,
       })
       .select()

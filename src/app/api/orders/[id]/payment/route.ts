@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireCustomer } from "@/lib/auth/customer";
-import { requireAdmin } from "@/lib/auth/admin";
+import { requireCustomerOrAdmin } from "@/lib/auth";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -10,21 +9,12 @@ export async function GET(request: Request, context: RouteContext) {
   try {
     const { id: orderId } = await context.params;
 
-    // Check if customer or admin
-    let auth = await requireCustomer(request);
-    let isAdmin = false;
-
+    const auth = await requireCustomerOrAdmin(request);
     if (!auth.authorized) {
-      // Check admin
-      const adminAuth = await requireAdmin(request);
-      if (!adminAuth.authorized) {
-        return auth.response;
-      }
-      isAdmin = true;
-      auth = adminAuth;
+      return auth.response;
     }
 
-    const { supabase } = auth;
+    const { supabase, isAdmin } = auth;
 
     // Retrieve or create payment record via secure RPC
     const { data: paymentResult, error: rpcError } = await supabase.rpc(

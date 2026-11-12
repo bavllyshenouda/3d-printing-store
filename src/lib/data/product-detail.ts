@@ -29,6 +29,8 @@ export interface ProductDetail {
   available_colors: string[] | null;
   is_active: boolean;
   is_featured: boolean;
+  width?: number | null;
+  height?: number | null;
   created_at: string;
   updated_at: string;
   category: ProductDetailCategory | null;
@@ -57,6 +59,8 @@ export async function getProductDetail(slugOrId: string): Promise<ProductDetail 
         available_colors,
         is_active,
         is_featured,
+        width,
+        height,
         created_at,
         updated_at,
         category:categories(id, name, slug, description, is_active),
@@ -125,6 +129,8 @@ export async function getRelatedProducts(
         available_colors,
         is_active,
         is_featured,
+        width,
+        height,
         created_at,
         category:categories(id, name, slug),
         images:product_images(id, image_url, alt_text, is_primary, sort_order)
@@ -182,6 +188,8 @@ export async function getRelatedProducts(
           available_colors,
           is_active,
           is_featured,
+          width,
+          height,
           created_at,
           category:categories(id, name, slug),
           images:product_images(id, image_url, alt_text, is_primary, sort_order)

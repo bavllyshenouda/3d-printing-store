@@ -95,6 +95,8 @@ export function ProductFormModal({
   const [stock, setStock] = useState("");
   const [material, setMaterial] = useState("PLA");
   const [colors, setColors] = useState("Black, White, Orange");
+  const [width, setWidth] = useState("");
+  const [height, setHeight] = useState("");
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [isFeatured, setIsFeatured] = useState(false);
@@ -137,6 +139,8 @@ export function ProductFormModal({
       setPrice(product.price ? String(product.price) : "0");
       setStock(product.stock !== undefined ? String(product.stock) : "0");
       setMaterial(product.material || "PLA");
+      setWidth(product.width !== undefined && product.width !== null ? String(product.width) : "");
+      setHeight(product.height !== undefined && product.height !== null ? String(product.height) : "");
       setColors(
         Array.isArray(product.available_colors)
           ? product.available_colors.join(", ")
@@ -176,6 +180,8 @@ export function ProductFormModal({
       setPrice("0");
       setStock("10");
       setMaterial("PLA");
+      setWidth("");
+      setHeight("");
       setColors("Black, White, Orange");
       setDescription("");
       setIsActive(true);
@@ -444,6 +450,18 @@ export function ProductFormModal({
       .map((c) => c.trim())
       .filter(Boolean);
 
+    const parsedWidth = width.trim() ? parseFloat(width) : null;
+    if (parsedWidth !== null && (isNaN(parsedWidth) || parsedWidth < 0)) {
+      toast.error("Validation error", "Please enter a valid width or leave empty");
+      return;
+    }
+
+    const parsedHeight = height.trim() ? parseFloat(height) : null;
+    if (parsedHeight !== null && (isNaN(parsedHeight) || parsedHeight < 0)) {
+      toast.error("Validation error", "Please enter a valid height or leave empty");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload: any = {
@@ -452,6 +470,8 @@ export function ProductFormModal({
         stock: parsedStock,
         material: material.trim() || null,
         available_colors: colorsArray,
+        width: parsedWidth,
+        height: parsedHeight,
         description: description.trim() || null,
         is_active: isActive,
         is_featured: isFeatured,
@@ -675,6 +695,38 @@ export function ProductFormModal({
               onChange={(e) => setColors(e.target.value)}
               placeholder="Black, Stealth Grey, Orange"
               className="text-xs"
+            />
+          </div>
+
+          {/* Width (Horizontal Dimension) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">
+              Width (cm)
+            </label>
+            <Input
+              type="number"
+              step="0.1"
+              min="0"
+              value={width}
+              onChange={(e) => setWidth(e.target.value)}
+              placeholder="e.g. 12"
+              className="text-xs font-mono"
+            />
+          </div>
+
+          {/* Height (Vertical Dimension) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">
+              Height (cm)
+            </label>
+            <Input
+              type="number"
+              step="0.1"
+              min="0"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              placeholder="e.g. 32"
+              className="text-xs font-mono"
             />
           </div>
         </div>

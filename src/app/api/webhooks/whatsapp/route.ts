@@ -1,25 +1,63 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import {
   defaultWhatsAppProvider,
   InboundMessageEvent,
 } from "@/lib/whatsapp/provider";
 import { processInboundWhatsAppMessage } from "@/lib/whatsapp/service";
 
+let hasLoggedMissingConfig = false;
+
+function checkWebhookConfig(): boolean {
+  const isDevMock =
+    process.env.NODE_ENV === "development" &&
+    process.env.WHATSAPP_MOCK_MODE === "true";
+
+  if (isDevMock) {
+    return true;
+  }
+
+  if (!process.env.WHATSAPP_APP_SECRET || !process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
+    if (!hasLoggedMissingConfig) {
+      console.error(
+        "WhatsApp Webhook configuration error: WHATSAPP_APP_SECRET or WHATSAPP_WEBHOOK_VERIFY_TOKEN is missing."
+      );
+      hasLoggedMissingConfig = true;
+    }
+    return false;
+  }
+
+  return true;
+}
+
 /**
  * GET: Webhook verification challenge for Meta WhatsApp Business Platform
  */
 export async function GET(request: Request) {
+  if (!checkWebhookConfig()) {
+    return NextResponse.json(
+      { error: "Service Unavailable: WhatsApp webhook is not configured" },
+      { status: 503 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
 
   const mode = searchParams.get("hub.mode");
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
-  const expectedToken =
-    process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || "whatsapp_verify_token_sample";
+  const expectedToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
 
-  if (mode === "subscribe" && token === expectedToken) {
-    return new Response(challenge || "", { status: 200 });
+  if (mode === "subscribe" && token && expectedToken) {
+    const tokenBuf = Buffer.from(token);
+    const expectedBuf = Buffer.from(expectedToken);
+    if (
+      tokenBuf.length === expectedBuf.length &&
+      crypto.timingSafeEqual(tokenBuf, expectedBuf)
+    ) {
+      return new Response(challenge || "", { status: 200 });
+    }
   }
 
   return NextResponse.json(
@@ -32,6 +70,13 @@ export async function GET(request: Request) {
  * POST: Inbound WhatsApp messages & status updates webhook
  */
 export async function POST(request: Request) {
+  if (!checkWebhookConfig()) {
+    return NextResponse.json(
+      { error: "Service Unavailable: WhatsApp webhook is not configured" },
+      { status: 503 }
+    );
+  }
+
   try {
     const rawBody = await request.text();
     const signature = request.headers.get("x-hub-signature-256");
@@ -61,8 +106,13 @@ export async function POST(request: Request) {
     const events: InboundMessageEvent[] =
       defaultWhatsAppProvider.parseInboundPayload(payload);
 
-    // Also support direct simulated/test payloads in Postman: { senderPhone, messageText, providerMessageId }
+    // Simulated test payloads only allowed in dev + mock mode
+    const isDevMock =
+      process.env.NODE_ENV === "development" &&
+      process.env.WHATSAPP_MOCK_MODE === "true";
+
     if (
+      isDevMock &&
       events.length === 0 &&
       typeof payload?.senderPhone === "string" &&
       typeof payload?.messageText === "string"
@@ -75,13 +125,26 @@ export async function POST(request: Request) {
             ? payload.providerMessageId
             : `sim_${Date.now()}`,
         timestamp: new Date().toISOString(),
+        contextMessageId:
+          typeof payload.contextMessageId === "string"
+            ? payload.contextMessageId
+            : undefined,
       });
     }
 
+    // Always return 200 quickly for valid-signature payloads even if one event fails (log the error)
     const results = [];
     for (const event of events) {
-      const result = await processInboundWhatsAppMessage(event);
-      results.push(result);
+      try {
+        const result = await processInboundWhatsAppMessage(event);
+        results.push(result);
+      } catch (eventErr) {
+        console.error("Error processing inbound WhatsApp message event:", eventErr);
+        results.push({
+          status: "error",
+          error: eventErr instanceof Error ? eventErr.message : "Internal processing error",
+        });
+      }
     }
 
     return NextResponse.json(
@@ -93,6 +156,7 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   } catch (error) {
+    console.error("WhatsApp webhook unexpected fatal error:", error);
     return NextResponse.json(
       {
         success: false,

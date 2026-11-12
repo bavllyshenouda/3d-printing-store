@@ -5,15 +5,13 @@ import {
   Banknote,
   Smartphone,
   Wallet,
-  CreditCard,
   Copy,
   Check,
   Info,
-  ShieldCheck,
-  CheckCircle2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { paymentConfig } from "@/lib/config/payment";
 import { useTranslation } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +72,7 @@ export function PaymentMethodInstructions({
   }
 
   if (method === "instapay") {
-    const ipnHandle = "printstudio@instapay";
+    const ipnHandle = paymentConfig.instapayHandle;
 
     return (
       <div
@@ -108,33 +106,35 @@ export function PaymentMethodInstructions({
         </div>
 
         {/* Transfer Destination Box */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-card border border-[#FF6B35]/30 shadow-xs">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-              Official Studio IPA
-            </span>
-            <span className="font-mono text-base font-extrabold text-[#FF6B35] select-all">
-              {ipnHandle}
-            </span>
-          </div>
+        {ipnHandle ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-card border border-[#FF6B35]/30 shadow-xs">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Official Studio IPA
+              </span>
+              <span className="font-mono text-base font-extrabold text-[#FF6B35] select-all">
+                {ipnHandle}
+              </span>
+            </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => copyToClipboard(ipnHandle, "instapay")}
-            className="h-9 px-3 text-xs font-semibold self-start sm:self-auto border-border hover:border-[#FF6B35]"
-            iconLeft={
-              copiedKey === "instapay" ? (
-                <Check className="size-3.5 text-emerald-500" />
-              ) : (
-                <Copy className="size-3.5" />
-              )
-            }
-          >
-            {copiedKey === "instapay" ? t("payment.copySuccess") : t("payment.copyButton")}
-          </Button>
-        </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => copyToClipboard(ipnHandle, "instapay")}
+              className="h-9 px-3 text-xs font-semibold self-start sm:self-auto border-border hover:border-[#FF6B35]"
+              iconLeft={
+                copiedKey === "instapay" ? (
+                  <Check className="size-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="size-3.5" />
+                )
+              }
+            >
+              {copiedKey === "instapay" ? t("payment.copySuccess") : t("payment.copyButton")}
+            </Button>
+          </div>
+        ) : null}
 
         {/* Numbered Steps */}
         <div className="space-y-2.5 pt-1 text-xs sm:text-sm text-foreground/90">
@@ -183,7 +183,7 @@ export function PaymentMethodInstructions({
   }
 
   if (method === "vodafone_cash") {
-    const walletNumber = "01019882341";
+    const walletNumber = paymentConfig.vodafoneCashNumber;
 
     return (
       <div
@@ -217,33 +217,35 @@ export function PaymentMethodInstructions({
         </div>
 
         {/* Transfer Destination Box */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-card border border-red-500/30 shadow-xs">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-              Registered Studio Wallet
-            </span>
-            <span className="font-mono text-base font-extrabold text-red-500 select-all" dir="ltr">
-              {walletNumber}
-            </span>
-          </div>
+        {walletNumber ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-card border border-red-500/30 shadow-xs">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Registered Studio Wallet
+              </span>
+              <span className="font-mono text-base font-extrabold text-red-500 select-all" dir="ltr">
+                {walletNumber}
+              </span>
+            </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => copyToClipboard(walletNumber, "vodafone")}
-            className="h-9 px-3 text-xs font-semibold self-start sm:self-auto border-border hover:border-red-500"
-            iconLeft={
-              copiedKey === "vodafone" ? (
-                <Check className="size-3.5 text-emerald-500" />
-              ) : (
-                <Copy className="size-3.5" />
-              )
-            }
-          >
-            {copiedKey === "vodafone" ? t("payment.copySuccess") : t("payment.copyButton")}
-          </Button>
-        </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => copyToClipboard(walletNumber, "vodafone")}
+              className="h-9 px-3 text-xs font-semibold self-start sm:self-auto border-border hover:border-red-500"
+              iconLeft={
+                copiedKey === "vodafone" ? (
+                  <Check className="size-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="size-3.5" />
+                )
+              }
+            >
+              {copiedKey === "vodafone" ? t("payment.copySuccess") : t("payment.copyButton")}
+            </Button>
+          </div>
+        ) : null}
 
         {/* Numbered Steps */}
         <div className="space-y-2.5 pt-1 text-xs sm:text-sm text-foreground/90">
@@ -291,27 +293,29 @@ export function PaymentMethodInstructions({
     );
   }
 
-  // Fallback for online
+  // Fallback for legacy or unknown payment methods (e.g., historical orders)
   return (
     <div
       className={cn(
-        "rounded-3xl border border-blue-500/30 bg-blue-500/5 p-6 space-y-4 text-start",
+        "rounded-3xl border border-border/80 bg-card p-6 space-y-4 text-start",
         className
       )}
     >
       <div className="flex items-center gap-3">
-        <div className="flex size-11 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 shrink-0 shadow-xs">
-          <CreditCard className="size-6" />
+        <div className="flex size-11 items-center justify-center rounded-2xl bg-muted text-muted-foreground shrink-0 shadow-xs">
+          <Info className="size-6" />
         </div>
         <div>
-          <h3 className="font-heading text-base font-bold text-foreground">
-            {t("payment.methodOnline")}
+          <h3 className="font-heading text-base font-bold text-foreground capitalize">
+            {method ? method.replace(/_/g, " ") : "Payment Details"}
           </h3>
-          <span className="text-xs text-muted-foreground">Visa · Mastercard</span>
+          <span className="text-xs text-muted-foreground">
+            {currency} {amount.toFixed(2)}
+          </span>
         </div>
       </div>
       <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-        Card transaction processed securely.
+        Payment details recorded for this order. No further action is required from this screen.
       </p>
     </div>
   );

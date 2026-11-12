@@ -159,7 +159,6 @@ export function OrdersTable() {
               <option value="cod">Cash on Delivery</option>
               <option value="instapay">InstaPay</option>
               <option value="vodafone_cash">Vodafone Cash</option>
-              <option value="online">Online Card</option>
             </select>
           </>
         }

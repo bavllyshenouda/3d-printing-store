@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Container } from "@/components/layout/container";
@@ -19,7 +19,7 @@ import type { CustomerAddress } from "@/types/database";
 
 export function CheckoutView() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isLoading: authLoading } = useAuth();
   const { items: cartItems, summary, isLoading: cartLoading, refreshCart } = useCart();
   const { t, isRTL } = useTranslation();
 
@@ -34,8 +34,10 @@ export function CheckoutView() {
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const isSubmittingRef = useRef(false);
 
   // Derived financials
+  // Note: The displayed shipping fee and total are client-side estimates; the server calculates the final authoritative values upon order creation.
   const shippingFee = selectedAddress ? getShippingFee(selectedAddress.governorate) : 50;
   const subtotal = summary.subtotal;
   const discountAmount = 0;
@@ -48,6 +50,8 @@ export function CheckoutView() {
       return;
     }
 
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     setSubmissionError(null);
 
@@ -55,8 +59,6 @@ export function CheckoutView() {
       const payload = {
         address_id: selectedAddress.id,
         payment_method: paymentMethod,
-        shipping_fee: shippingFee,
-        discount_amount: discountAmount,
         address_notes: deliveryNotes.trim() || null,
       };
 
@@ -65,6 +67,20 @@ export function CheckoutView() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      if (res.status === 401) {
+        throw new Error(
+          t("checkout.sessionExpired") ||
+            "Your session has expired. Please sign in to complete your checkout."
+        );
+      }
+
+      if (res.status === 429) {
+        throw new Error(
+          t("checkout.rateLimited") ||
+            "Too many checkout attempts. Please wait a moment before trying again."
+        );
+      }
 
       const data = await res.json();
 
@@ -84,13 +100,13 @@ export function CheckoutView() {
         router.push("/orders");
       }
     } catch (err: unknown) {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
       setSubmissionError(
         err instanceof Error ? err.message : "An unexpected error occurred while placing order."
       );
       // Scroll to top to ensure error is visible
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

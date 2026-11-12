@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireCustomer } from "@/lib/auth/customer";
 import { createCustomPrintRequestSchema } from "@/lib/validations/custom-print";
+import { parsePaginationParams } from "@/lib/utils/pagination";
 
 export async function GET(request: Request) {
   try {
@@ -12,9 +13,11 @@ export async function GET(request: Request) {
     const { user, supabase } = auth;
     const { searchParams } = new URL(request.url);
 
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "10", 10)));
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = parsePaginationParams(searchParams, {
+      defaultPage: 1,
+      defaultLimit: 10,
+      maxLimit: 50,
+    });
     const status = searchParams.get("status");
 
     let query = supabase

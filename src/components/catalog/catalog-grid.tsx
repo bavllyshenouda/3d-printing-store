@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, RotateCcw, UploadCloud, Eye, ShoppingBag } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, RotateCcw, UploadCloud } from "lucide-react";
 import { ProductCard } from "@/components/ui/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -32,6 +33,7 @@ export function CatalogGrid({
   onResetFilters,
   className,
 }: CatalogGridProps) {
+  const router = useRouter();
   const { t, locale } = useTranslation();
   const [quickViewProduct, setQuickViewProduct] = useState<CatalogProduct | null>(null);
 
@@ -166,12 +168,14 @@ export function CatalogGrid({
                 availableColors={product.available_colors || []}
                 categoryName={localizedCategory}
                 isFeatured={product.is_featured}
+                width={product.width}
+                height={product.height}
                 primaryImageUrl={primaryImg}
                 secondaryImageUrl={secondaryImg}
                 onQuickView={() => setQuickViewProduct(product)}
-                onAddToCart={(id) => {
+                onAddToCart={() => {
                   // Direct to product page or cart toast
-                  window.location.href = `/products/${product.slug}`;
+                  router.push(`/products/${product.slug}`);
                 }}
               />
             </div>

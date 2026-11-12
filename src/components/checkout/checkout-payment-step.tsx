@@ -5,7 +5,6 @@ import {
   Banknote,
   Smartphone,
   Wallet,
-  CreditCard,
   CheckCircle2,
   Copy,
   Check,
@@ -18,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/lib/i18n/context";
 
-export type PaymentMethod = "cod" | "instapay" | "vodafone_cash" | "online";
+export type PaymentMethod = "cod" | "instapay" | "vodafone_cash";
 
 export interface CheckoutPaymentStepProps {
   paymentMethod: PaymentMethod;
@@ -77,14 +76,6 @@ export function CheckoutPaymentStep({
       icon: Wallet,
       accentColor: "text-red-500",
     },
-    {
-      id: "online",
-      title: t("checkout.onlineTitle"),
-      description: t("checkout.onlineDesc"),
-      badge: "Visa · Mastercard",
-      icon: CreditCard,
-      accentColor: "text-blue-500",
-    },
   ];
 
   return (
@@ -92,7 +83,7 @@ export function CheckoutPaymentStep({
       {/* Header */}
       <div>
         <h2 className="font-heading text-lg sm:text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <CreditCard className="size-5 text-[#FF6B35]" />
+          <Wallet className="size-5 text-[#FF6B35]" />
           <span>{t("checkout.paymentMethod")}</span>
         </h2>
         <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">

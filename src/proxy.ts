@@ -1,8 +1,37 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { Database } from "@/types/database";
+import { safeInternalPath } from "@/lib/auth/safe-redirect";
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // 1. Protected routes: redirect unauthenticated users to login
+  const isProtectedRoute =
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/checkout") ||
+    pathname.startsWith("/orders") ||
+    pathname.startsWith("/custom-prints/new") ||
+    pathname.startsWith("/custom-prints/my-requests") ||
+    (pathname.startsWith("/custom-prints/") && pathname !== "/custom-prints") ||
+    pathname.startsWith("/admin");
+
+  // 2. Auth routes: redirect already authenticated users to profile
+  const isAuthRoute =
+    pathname === "/auth/login" ||
+    pathname === "/auth/register" ||
+    pathname === "/login" ||
+    pathname === "/register";
+
+  const isAdminRoute = pathname.startsWith("/admin");
+
+  // Fast-path: Public pages do not require auth check overhead
+  if (!isProtectedRoute && !isAuthRoute && !isAdminRoute) {
+    return NextResponse.next({
+      request,
+    });
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -35,18 +64,6 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-
-  // 1. Protected routes: redirect unauthenticated users to login
-  const isProtectedRoute =
-    pathname.startsWith("/profile") ||
-    pathname.startsWith("/checkout") ||
-    pathname.startsWith("/orders") ||
-    pathname.startsWith("/custom-prints/new") ||
-    pathname.startsWith("/custom-prints/my-requests") ||
-    (pathname.startsWith("/custom-prints/") && pathname !== "/custom-prints") ||
-    pathname.startsWith("/admin");
-
   if (isProtectedRoute && !user) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("redirect", pathname + request.nextUrl.search);
@@ -66,19 +83,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 2. Auth routes: redirect already authenticated users to profile
-  const isAuthRoute =
-    pathname === "/auth/login" ||
-    pathname === "/auth/register" ||
-    pathname === "/login" ||
-    pathname === "/register";
-
   if (isAuthRoute && user) {
     const redirectParam = request.nextUrl.searchParams.get("redirect");
-    const target =
-      redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
-        ? redirectParam
-        : "/profile";
+    const target = safeInternalPath(redirectParam, "/profile");
     return NextResponse.redirect(new URL(target, request.url));
   }
 

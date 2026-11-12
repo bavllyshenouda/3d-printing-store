@@ -140,6 +140,54 @@ export async function DELETE(request: Request, context: RouteContext) {
       );
     }
 
+    // Check if category exists
+    const { data: existingCategory, error: catError } = await supabase
+      .from("categories")
+      .select("id, name")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (catError) {
+      return NextResponse.json(
+        { success: false, error: catError.message },
+        { status: 500 }
+      );
+    }
+
+    if (!existingCategory) {
+      return NextResponse.json(
+        { success: false, error: "Category not found" },
+        { status: 404 }
+      );
+    }
+
+    // Hard delete: check how many products reference this category
+    const { count: productCount, error: countError } = await supabase
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("category_id", id);
+
+    if (countError) {
+      return NextResponse.json(
+        { success: false, error: countError.message },
+        { status: 500 }
+      );
+    }
+
+    const assignedCount = productCount ?? 0;
+    const force = searchParams.get("force") === "true";
+
+    if (assignedCount > 0 && !force) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Cannot delete category: ${assignedCount} product(s) reference this category. Pass ?force=true to proceed with deletion and disassociate them.`,
+          product_count: assignedCount,
+        },
+        { status: 409 }
+      );
+    }
+
     // Hard delete (products.category_id will be set to NULL via ON DELETE SET NULL)
     const { error } = await supabase.from("categories").delete().eq("id", id);
 
@@ -154,6 +202,7 @@ export async function DELETE(request: Request, context: RouteContext) {
       {
         success: true,
         message: "Category deleted successfully",
+        product_count: assignedCount,
       },
       { status: 200 }
     );

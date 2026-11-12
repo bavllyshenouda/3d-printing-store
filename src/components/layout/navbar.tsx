@@ -43,19 +43,18 @@ export function Navbar({
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [cartCount, setCartCount] = useState(propCartCount);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   // Measured header height so the mobile menu always sits exactly below the bar on
   // every viewport / scroll state / locale. Defaults to the previous fixed 88px.
   const headerRef = useRef<HTMLElement>(null);
   const [headerHeight, setHeaderHeight] = useState(88);
   const pathname = usePathname();
-  const { t, isRTL } = useTranslation();
+  const { t } = useTranslation();
   const { user: authUser, profile, logout, isAuthenticated, isAdmin } = useAuth();
   const { summary, openDrawer } = useCart();
 
   const currentUser = authUser || propUser;
-  const activeCartCount = summary.total_items > 0 ? summary.total_items : (cartCount || propCartCount);
+  const activeCartCount = summary?.total_items ?? propCartCount ?? 0;
   const userDisplayName =
     profile?.first_name
       ? `${profile.first_name} ${profile.last_name || ""}`.trim()
@@ -66,37 +65,6 @@ export function Navbar({
       : currentUser?.email
       ? currentUser.email[0].toUpperCase()
       : "U";
-
-  // Synchronize cart count from prop
-  useEffect(() => {
-    setCartCount(propCartCount);
-  }, [propCartCount]);
-
-  // Listen to cart-updated events and fetch live count
-  useEffect(() => {
-    const fetchCartCount = async () => {
-      try {
-        const res = await fetch("/api/cart");
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data?.cart) {
-            setCartCount(json.data.cart.total_items || 0);
-          }
-        }
-      } catch {
-        // Silently ignore if unauthenticated or network error
-      }
-    };
-
-    fetchCartCount();
-
-    const handleCartUpdated = () => {
-      fetchCartCount();
-    };
-
-    window.addEventListener("cart-updated", handleCartUpdated);
-    return () => window.removeEventListener("cart-updated", handleCartUpdated);
-  }, []);
 
   const navItems = [
     { label: t("nav.catalog"), href: "/products" },

@@ -120,6 +120,17 @@ export async function PATCH(request: Request, context: RouteContext) {
     const { status, payment_status, carrier, tracking_number, status_note } =
       parseResult.data;
 
+    // Do not allow payment_status to be set directly to paid or refunded from this endpoint
+    if (payment_status === "paid" || payment_status === "refunded") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `payment_status cannot be set directly to '${payment_status}' from this endpoint. Payments must be verified and processed through /api/admin/payments/[id]/review.`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Fetch current order to check current status and state transition
     const { data: currentOrder, error: fetchError } = await supabase
       .from("orders")
@@ -133,6 +144,8 @@ export async function PATCH(request: Request, context: RouteContext) {
         { status: 404 }
       );
     }
+
+    let cancelRpcExecuted = false;
 
     // 1. Enforce valid state transition if status is being updated
     if (status && status !== currentOrder.status) {
@@ -162,6 +175,8 @@ export async function PATCH(request: Request, context: RouteContext) {
             { status: 400 }
           );
         }
+
+        cancelRpcExecuted = true;
       }
     }
 
@@ -173,10 +188,13 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     if (status) {
       updatePayload.status = status;
-      if (status === "confirmed" && !currentOrder.status) {
+      if (
+        status === "confirmed" &&
+        currentOrder.status === "pending_customer_confirmation"
+      ) {
         updatePayload.confirmed_at = now;
       }
-      if (status === "cancelled") {
+      if (status === "cancelled" || status === "rejected") {
         updatePayload.cancelled_at = now;
       }
     }
@@ -194,14 +212,20 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     if (updateError) {
       return NextResponse.json(
-        { success: false, error: updateError.message },
+        {
+          success: false,
+          error: cancelRpcExecuted
+            ? `Order was cancelled and inventory restored, but follow-up database writes failed: ${updateError.message}`
+            : updateError.message,
+        },
         { status: 500 }
       );
     }
 
-    // 3. Insert shipping event if status or tracking updated
-    if (status || tracking_number || carrier) {
-      await supabase.from("shipping_events").insert({
+    // 3. Insert shipping event if status or tracking updated (unless cancel RPC already logged it)
+    // TODO(db): confirm which side should own the shipping_event insert on cancellation (the RPC or the route handler)
+    if (!cancelRpcExecuted && (status || tracking_number || carrier)) {
+      const { error: insertError } = await supabase.from("shipping_events").insert({
         order_id: id,
         status: status || currentOrder.status,
         carrier: carrier || null,
@@ -212,6 +236,18 @@ export async function PATCH(request: Request, context: RouteContext) {
             tracking_number ? ` with tracking ${tracking_number}` : ""
           }.`,
       });
+
+      if (insertError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: cancelRpcExecuted
+              ? `Order was cancelled and inventory restored, but follow-up database writes failed: ${insertError.message}`
+              : `Order updated, but recording shipping event failed: ${insertError.message}`,
+          },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json(

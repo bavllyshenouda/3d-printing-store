@@ -29,7 +29,6 @@ import {
   XCircle,
   AlertCircle,
   FileText,
-  CreditCard,
   Banknote,
   Smartphone,
   Wallet,
@@ -77,7 +76,7 @@ export function RequestDetailsView({ requestId }: RequestDetailsViewProps) {
   const [acceptingQuote, setAcceptingQuote] = useState<CustomPrintQuote | null>(null);
   const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"cod" | "instapay" | "vodafone_cash" | "online">("cod");
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "instapay" | "vodafone_cash">("cod");
   const [isSubmittingAccept, setIsSubmittingAccept] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
@@ -171,12 +170,10 @@ export function RequestDetailsView({ requestId }: RequestDetailsViewProps) {
 
     setIsSubmittingAccept(true);
     try {
-      const shippingFee = getShippingFee(selectedAddress.governorate);
-
+      // Note: The displayed shipping fee and total are client-side estimates; the server calculates the final authoritative values upon order creation.
       const payload = {
         address_id: selectedAddress.id,
         payment_method: paymentMethod,
-        shipping_fee: shippingFee,
       };
 
       const res = await fetch(
@@ -710,15 +707,21 @@ export function RequestDetailsView({ requestId }: RequestDetailsViewProps) {
                     <span className="text-muted-foreground block mb-1">
                       Reference Link
                     </span>
-                    <a
-                      href={request.reference_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#FF6B35] font-mono text-xs hover:underline flex items-center gap-1 truncate"
-                    >
-                      <span className="truncate">{request.reference_url}</span>
-                      <ExternalLink className="size-3 shrink-0" />
-                    </a>
+                    {/^https?:\/\//i.test(request.reference_url) ? (
+                      <a
+                        href={request.reference_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#FF6B35] font-mono text-xs hover:underline flex items-center gap-1 truncate"
+                      >
+                        <span className="truncate">{request.reference_url}</span>
+                        <ExternalLink className="size-3 shrink-0" />
+                      </a>
+                    ) : (
+                      <span className="font-mono text-xs text-muted-foreground truncate block">
+                        {request.reference_url}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -772,7 +775,7 @@ export function RequestDetailsView({ requestId }: RequestDetailsViewProps) {
                 {t("customPrintApp.acceptModalDesc")}
               </p>
 
-              {/* Authoritative Quote Breakdown */}
+              {/* Quote Breakdown: Displayed total is an estimate; server value is final */}
               <div className="rounded-2xl border border-border/80 bg-muted/20 p-4 space-y-2 text-xs sm:text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Custom Fabrication Subtotal</span>
@@ -842,7 +845,7 @@ export function RequestDetailsView({ requestId }: RequestDetailsViewProps) {
               {/* Payment Method Selector */}
               <div className="space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <CreditCard className="size-4 text-[#FF6B35]" />
+                  <Wallet className="size-4 text-[#FF6B35]" />
                   <span>{t("customPrintApp.paymentMethod")}</span>
                 </span>
 
@@ -851,7 +854,6 @@ export function RequestDetailsView({ requestId }: RequestDetailsViewProps) {
                     { id: "cod", label: "Cash on Delivery", icon: Banknote },
                     { id: "instapay", label: "InstaPay IPN", icon: Smartphone },
                     { id: "vodafone_cash", label: "Vodafone Cash", icon: Wallet },
-                    { id: "online", label: "Card Payment", icon: CreditCard },
                   ].map((pm) => {
                     const isSelected = paymentMethod === pm.id;
                     const Icon = pm.icon;

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { productQuerySchema } from "@/lib/validations/product";
+import {
+  sanitizePostgrestFilter,
+  escapeIlikePattern,
+} from "@/lib/utils/postgrest";
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -88,6 +92,8 @@ export async function GET(request: Request) {
         available_colors,
         is_active,
         is_featured,
+        width,
+        height,
         created_at,
         updated_at,
         category:categories(id, name, slug),
@@ -110,14 +116,17 @@ export async function GET(request: Request) {
     }
 
     if (material) {
-      query = query.ilike("material", `%${material}%`);
+      const escapedMaterial = escapeIlikePattern(material);
+      query = query.ilike("material", `%${escapedMaterial}%`);
     }
 
     if (search) {
-      const sanitized = search.replace(/[%_]/g, "\\$&");
-      query = query.or(
-        `name.ilike.%${sanitized}%,description.ilike.%${sanitized}%`
-      );
+      const sanitized = sanitizePostgrestFilter(search);
+      if (sanitized) {
+        query = query.or(
+          `name.ilike.%${sanitized}%,description.ilike.%${sanitized}%`
+        );
+      }
     }
 
     // Sorting

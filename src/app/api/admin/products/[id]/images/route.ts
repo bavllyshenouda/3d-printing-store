@@ -47,10 +47,20 @@ export async function POST(request: Request, context: RouteContext) {
 
     // If marked as primary, unmark other images for this product first
     if (input.is_primary) {
-      await supabase
+      const { error: unsetError } = await supabase
         .from("product_images")
         .update({ is_primary: false })
         .eq("product_id", productId);
+
+      if (unsetError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Failed to unset existing primary images: ${unsetError.message}`,
+          },
+          { status: 500 }
+        );
+      }
     }
 
     const { data: newImage, error } = await supabase

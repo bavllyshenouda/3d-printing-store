@@ -6,13 +6,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize2,
-  X,
   Layers,
   Sparkles,
-  ShieldCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
+import { DimensionIndicators } from "@/components/ui/dimension-indicators";
 import { ProductDetailImage } from "@/lib/data/product-detail";
 import { useTranslation } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
@@ -23,6 +22,8 @@ export interface ProductGalleryProps {
   material?: string | null;
   isFeatured?: boolean;
   stock: number;
+  width?: number | null;
+  height?: number | null;
   className?: string;
 }
 
@@ -32,6 +33,8 @@ export function ProductGallery({
   material,
   isFeatured,
   stock,
+  width,
+  height,
   className,
 }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -69,9 +72,17 @@ export function ProductGallery({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (validImages.length <= 1) return;
       if (e.key === "ArrowLeft") {
-        isRTL ? handleNext() : handlePrev();
+        if (isRTL) {
+          handleNext();
+        } else {
+          handlePrev();
+        }
       } else if (e.key === "ArrowRight") {
-        isRTL ? handlePrev() : handleNext();
+        if (isRTL) {
+          handlePrev();
+        } else {
+          handleNext();
+        }
       }
     };
 
@@ -147,6 +158,9 @@ export function ProductGallery({
             <span>{t("common.noImageAvailable")}</span>
           </div>
         )}
+
+        {/* Product Physical Dimensions Overlay */}
+        <DimensionIndicators width={width} height={height} variant="detail" />
 
         {/* Prev & Next Floating Arrow Triggers */}
         {validImages.length > 1 && (

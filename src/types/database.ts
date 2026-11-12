@@ -103,6 +103,8 @@ export type Database = {
           available_colors: string[];
           is_active: boolean;
           is_featured: boolean;
+          width: number | null;
+          height: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -118,6 +120,8 @@ export type Database = {
           available_colors?: string[];
           is_active?: boolean;
           is_featured?: boolean;
+          width?: number | null;
+          height?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -133,6 +137,8 @@ export type Database = {
           available_colors?: string[];
           is_active?: boolean;
           is_featured?: boolean;
+          width?: number | null;
+          height?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -954,7 +960,8 @@ export type OrderStatus =
   | "cancelled"
   | "rejected";
 
-export type PaymentMethod = "cod" | "instapay" | "vodafone_cash" | "online";
+// TODO(db): Update database CHECK constraint and RPC validation to remove "online" payment method
+export type PaymentMethod = "cod" | "instapay" | "vodafone_cash";
 
 export type PaymentStatus =
   | "pending"

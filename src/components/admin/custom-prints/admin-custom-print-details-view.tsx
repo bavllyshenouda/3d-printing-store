@@ -442,15 +442,21 @@ export function AdminCustomPrintDetailsView({
                 <span className="text-[10px] font-mono text-muted-foreground uppercase block mb-1">
                   Reference Link
                 </span>
-                <a
-                  href={request.reference_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[#FF6B35] font-mono text-xs hover:underline"
-                >
-                  <span className="truncate">{request.reference_url}</span>
-                  <ExternalLink className="size-3 shrink-0" />
-                </a>
+                {/^https?:\/\//i.test(request.reference_url) ? (
+                  <a
+                    href={request.reference_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-[#FF6B35] font-mono text-xs hover:underline"
+                  >
+                    <span className="truncate">{request.reference_url}</span>
+                    <ExternalLink className="size-3 shrink-0" />
+                  </a>
+                ) : (
+                  <span className="font-mono text-xs text-muted-foreground truncate block">
+                    {request.reference_url}
+                  </span>
+                )}
               </div>
             )}
           </div>

@@ -23,6 +23,7 @@ import { useTranslation } from "@/lib/i18n/context";
 import { EGYPTIAN_PHONE_REGEX } from "@/lib/validations/auth";
 import { GoogleAuthButton } from "@/components/auth/google-auth-button";
 import { resolveAuthMessage } from "@/lib/auth/error-messages";
+import { safeInternalPath } from "@/lib/auth/safe-redirect";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -31,10 +32,7 @@ export function RegisterForm() {
   const { t } = useTranslation();
 
   const redirectParam = searchParams.get("redirect");
-  const safeRedirect =
-    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
-      ? redirectParam
-      : "/profile";
+  const safeRedirect = safeInternalPath(redirectParam, "/profile");
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -86,7 +84,7 @@ export function RegisterForm() {
 
     if (!password) {
       newErrors.password = t("auth.errPasswordRequired");
-    } else if (password.length < 6) {
+    } else if (password.length < 8) {
       newErrors.password = t("auth.errPasswordShort");
     }
 

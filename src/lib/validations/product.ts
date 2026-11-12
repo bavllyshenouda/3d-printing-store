@@ -17,7 +17,7 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-export const categorySchema = z.object({
+export const baseCategorySchema = z.object({
   name: z
     .string()
     .trim()
@@ -34,14 +34,21 @@ export const categorySchema = z.object({
     .optional(),
   description: z.string().trim().max(1000).optional().nullable(),
   image_url: z.string().trim().url("Must be a valid URL").optional().nullable(),
+  is_active: z.boolean().optional(),
+  sort_order: z.number().int().min(0).optional(),
+});
+
+export const categorySchema = baseCategorySchema.extend({
   is_active: z.boolean().optional().default(true),
   sort_order: z.number().int().min(0).optional().default(0),
 });
 
-export const updateCategorySchema = categorySchema.partial().refine(
-  (data) => Object.keys(data).length > 0,
-  { message: "At least one field must be provided for update." }
-);
+export const updateCategorySchema = baseCategorySchema
+  .partial()
+  .refine(
+    (data) => Object.values(data).some((val) => val !== undefined),
+    { message: "At least one field must be provided for update." }
+  );
 
 export const productSchema = z.object({
   name: z
@@ -79,6 +86,8 @@ export const productSchema = z.object({
     .default([]),
   is_active: z.boolean().optional().default(true),
   is_featured: z.boolean().optional().default(false),
+  width: z.number().min(0, "Width cannot be negative.").optional().nullable(),
+  height: z.number().min(0, "Height cannot be negative.").optional().nullable(),
 });
 
 export const updateProductSchema = z
@@ -105,17 +114,35 @@ export const updateProductSchema = z
       .optional(),
     is_active: z.boolean().optional(),
     is_featured: z.boolean().optional(),
+    width: z.number().min(0, "Width cannot be negative.").optional().nullable(),
+    height: z.number().min(0, "Height cannot be negative.").optional().nullable(),
   })
-  .refine((data) => Object.keys(data).length > 0, {
+  .refine((data) => Object.values(data).some((val) => val !== undefined), {
     message: "At least one field must be provided for update.",
   });
 
 export const productImageSchema = z.object({
-  image_url: z.string().trim().min(1, "Image URL is required."),
+  image_url: z
+    .string()
+    .trim()
+    .url("Image URL must be a valid URL")
+    .refine((url) => url.startsWith("https://"), {
+      message: "Image URL must use HTTPS",
+    }),
   alt_text: z.string().trim().max(255).optional().nullable(),
   is_primary: z.boolean().optional().default(false),
   sort_order: z.number().int().min(0).optional().default(0),
 });
+
+export const updateProductImageSchema = z
+  .object({
+    alt_text: z.string().trim().max(255).optional().nullable(),
+    is_primary: z.boolean().optional(),
+    sort_order: z.number().int().min(0).optional(),
+  })
+  .refine((data) => Object.values(data).some((val) => val !== undefined), {
+    message: "At least one field must be provided for update.",
+  });
 
 export const productQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
@@ -124,7 +151,7 @@ export const productQuerySchema = z.object({
   min_price: z.coerce.number().min(0).optional(),
   max_price: z.coerce.number().min(0).optional(),
   material: z.string().trim().optional(),
-  search: z.string().trim().optional(),
+  search: z.string().trim().max(100).optional(),
   sort: z
     .enum([
       "price_asc",

@@ -8,6 +8,7 @@ export interface OutboundMessageParams {
   currency?: string;
   paymentMethod: string;
   itemsSummary?: string;
+  language?: "ar" | "en";
 }
 
 export interface InboundMessageEvent {
@@ -15,6 +16,7 @@ export interface InboundMessageEvent {
   messageText: string;
   providerMessageId: string;
   timestamp: string;
+  contextMessageId?: string;
 }
 
 export interface WhatsAppSendResult {
@@ -30,6 +32,24 @@ export interface WhatsAppProvider {
   parseInboundPayload(body: unknown): InboundMessageEvent[];
 }
 
+/**
+ * Normalizes Egyptian mobile numbers to international format (201xxxxxxxxx).
+ * Handles: 01xxxxxxxxx -> 201xxxxxxxxx, +201xxxxxxxxx -> 201xxxxxxxxx, 1xxxxxxxxx -> 201xxxxxxxxx.
+ */
+export function formatToInternationalEgyptPhone(phone: string): string {
+  const digits = phone.replace(/[^0-9]/g, "");
+  if (digits.startsWith("01") && digits.length === 11) {
+    return "20" + digits.substring(1);
+  }
+  if (digits.startsWith("1") && digits.length === 10) {
+    return "20" + digits;
+  }
+  if (digits.startsWith("201") && digits.length === 12) {
+    return digits;
+  }
+  return digits;
+}
+
 export class MetaWhatsAppProvider implements WhatsAppProvider {
   private apiToken = process.env.WHATSAPP_API_TOKEN;
   private phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
@@ -39,15 +59,20 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
 
   /**
    * Cryptographically verifies the incoming HMAC-SHA256 signature from Meta webhook.
+   * Uses timingSafeEqual and fails closed in production.
    */
   verifySignature(rawBody: string, signatureHeader: string | null): boolean {
-    if (!signatureHeader) {
-      return false;
-    }
+    const isDevMock =
+      process.env.NODE_ENV === "development" &&
+      process.env.WHATSAPP_MOCK_MODE === "true";
 
     if (!this.appSecret) {
-      // In development/test mock mode without configured secret, allow testing with mock signature
-      return signatureHeader === "sha256=mock_valid_signature";
+      // Allow signature bypass strictly in development + mock mode
+      return isDevMock;
+    }
+
+    if (!signatureHeader) {
+      return false;
     }
 
     const parts = signatureHeader.split("=");
@@ -62,9 +87,11 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
       .digest("hex");
 
     try {
-      return crypto.timingSafeEqual(
-        Buffer.from(providedSignature, "hex"),
-        Buffer.from(expectedSignature, "hex")
+      const providedBuf = Buffer.from(providedSignature, "hex");
+      const expectedBuf = Buffer.from(expectedSignature, "hex");
+      return (
+        providedBuf.length === expectedBuf.length &&
+        crypto.timingSafeEqual(providedBuf, expectedBuf)
       );
     } catch {
       return false;
@@ -75,7 +102,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
    * Dispatches order confirmation message to customer via WhatsApp Cloud API or simulated mock.
    */
   async sendOrderConfirmation(params: OutboundMessageParams): Promise<WhatsAppSendResult> {
-    const formattedPhone = params.toPhone.replace(/[^0-9]/g, "");
+    const formattedPhone = formatToInternationalEgyptPhone(params.toPhone);
 
     const bodyText =
       `Hello ${params.customerName}! 🛠️\n` +
@@ -86,7 +113,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
       `✅ CONFIRM (or 1) to confirm your order and begin production.\n` +
       `❌ CANCEL (or 2) to cancel this order.`;
 
-    // Simulated / mock delivery if credentials are not configured
+    // Simulated / mock delivery if credentials are not configured or mock mode enabled
     if (this.isMockMode) {
       const mockMessageId = `wamid.mock_${Date.now()}_${Math.random().toString(36).substring(7)}`;
       return {
@@ -98,13 +125,43 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
 
     try {
       const url = `https://graph.facebook.com/v21.0/${this.phoneNumberId}/messages`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.apiToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const templateName = process.env.WHATSAPP_TEMPLATE_NAME;
+      const langCode =
+        params.language === "ar" || params.language === "en"
+          ? params.language
+          : process.env.WHATSAPP_TEMPLATE_LANG === "en"
+          ? "en"
+          : "ar";
+
+      // Support sending an approved template message, falling back to text only in mock mode
+      let payloadBody: Record<string, unknown>;
+
+      if (templateName) {
+        payloadBody = {
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: formattedPhone,
+          type: "template",
+          template: {
+            name: templateName,
+            language: {
+              code: langCode,
+            },
+            components: [
+              {
+                type: "body",
+                parameters: [
+                  { type: "text", text: String(params.customerName) },
+                  { type: "text", text: String(params.orderNumber) },
+                  { type: "text", text: `${params.total} ${params.currency || "EGP"}` },
+                  { type: "text", text: params.paymentMethod.toUpperCase() },
+                ],
+              },
+            ],
+          },
+        };
+      } else {
+        payloadBody = {
           messaging_product: "whatsapp",
           recipient_type: "individual",
           to: formattedPhone,
@@ -113,7 +170,16 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
             preview_url: false,
             body: bodyText,
           },
-        }),
+        };
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apiToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payloadBody),
       });
 
       if (!response.ok) {
@@ -154,12 +220,16 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
           const messages = change?.value?.messages;
           if (Array.isArray(messages)) {
             for (const msg of messages) {
+              const contextMessageId =
+                typeof msg.context?.id === "string" ? msg.context.id : undefined;
+
               if (msg.type === "text" && msg.text?.body) {
                 events.push({
                   senderPhone: msg.from,
                   messageText: msg.text.body,
                   providerMessageId: msg.id,
                   timestamp: msg.timestamp || new Date().toISOString(),
+                  contextMessageId,
                 });
               } else if (msg.type === "button" && msg.button?.text) {
                 events.push({
@@ -167,6 +237,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
                   messageText: msg.button.text,
                   providerMessageId: msg.id,
                   timestamp: msg.timestamp || new Date().toISOString(),
+                  contextMessageId,
                 });
               } else if (msg.type === "interactive") {
                 const buttonReply = msg.interactive?.button_reply?.title;
@@ -177,6 +248,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
                     messageText: buttonReply || listReply,
                     providerMessageId: msg.id,
                     timestamp: msg.timestamp || new Date().toISOString(),
+                    contextMessageId,
                   });
                 }
               }

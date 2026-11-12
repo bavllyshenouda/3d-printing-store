@@ -31,6 +31,8 @@ export async function GET(request: Request, context: RouteContext) {
         available_colors,
         is_active,
         is_featured,
+        width,
+        height,
         created_at,
         updated_at,
         category:categories(id, name, slug),

@@ -6,6 +6,7 @@ import {
   productQuerySchema,
   slugify,
 } from "@/lib/validations/product";
+import { sanitizePostgrestFilter } from "@/lib/utils/postgrest";
 import { Database } from "@/types/database";
 
 // Resolve a slug that does not collide with an existing product, appending -2, -3, ...
@@ -70,6 +71,8 @@ export async function GET(request: Request) {
         available_colors,
         is_active,
         is_featured,
+        width,
+        height,
         created_at,
         updated_at,
         category:categories(id, name, slug),
@@ -83,10 +86,12 @@ export async function GET(request: Request) {
     }
 
     if (search) {
-      const sanitized = search.replace(/[%_]/g, "\\$&");
-      query = query.or(
-        `name.ilike.%${sanitized}%,description.ilike.%${sanitized}%`
-      );
+      const sanitized = sanitizePostgrestFilter(search);
+      if (sanitized) {
+        query = query.or(
+          `name.ilike.%${sanitized}%,description.ilike.%${sanitized}%`
+        );
+      }
     }
 
     switch (sort) {
@@ -228,6 +233,8 @@ export async function POST(request: Request) {
         available_colors: input.available_colors || [],
         is_active: input.is_active,
         is_featured: input.is_featured,
+        width: input.width ?? null,
+        height: input.height ?? null,
       })
       .select()
       .single();

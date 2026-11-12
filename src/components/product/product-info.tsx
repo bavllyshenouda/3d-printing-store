@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   ShoppingBag,
@@ -11,17 +11,16 @@ import {
   Loader2,
   ShieldCheck,
   Truck,
-  RotateCcw,
   Zap,
   MessageCircle,
   AlertTriangle,
-  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
 import { ProductDetail } from "@/lib/data/product-detail";
 import { ProductAuthModal } from "./product-auth-modal";
+import { LOW_STOCK_THRESHOLD, formatUnitsLeft } from "@/lib/constants/inventory";
 import { useTranslation } from "@/lib/i18n/context";
 import { useCart } from "@/lib/cart/context";
 import { getLocalizedField } from "@/lib/i18n";
@@ -33,8 +32,8 @@ export interface ProductInfoProps {
 }
 
 export function ProductInfo({ product, className }: ProductInfoProps) {
-  const { t, locale, isRTL } = useTranslation();
-  const { openDrawer } = useCart();
+  const { t, locale } = useTranslation();
+  const { openDrawer, refreshCart } = useCart();
 
   const colors =
     product.available_colors && product.available_colors.length > 0
@@ -48,7 +47,7 @@ export function ProductInfo({ product, className }: ProductInfoProps) {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const isOutOfStock = product.stock <= 0;
-  const isLowStock = product.stock > 0 && product.stock <= 3;
+  const isLowStock = product.stock > 0 && product.stock <= LOW_STOCK_THRESHOLD;
   const maxAvailable = product.stock;
 
   const localizedName = getLocalizedField(
@@ -144,13 +143,11 @@ export function ProductInfo({ product, className }: ProductInfoProps) {
         })
       );
 
+      // Refresh cart state to update badge and drawer
+      await refreshCart();
+
       // Open slide-out cart drawer
       openDrawer();
-
-      // Notify global listeners (e.g. Navbar cart badge)
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("cart-updated"));
-      }
     } catch (err) {
       console.error("Cart addition failed:", err);
       toast.error(t("common.error"), t("common.somethingWentWrong"));
@@ -219,14 +216,14 @@ export function ProductInfo({ product, className }: ProductInfoProps) {
             <span>{t("product.outOfStock")}</span>
           </div>
         ) : isLowStock ? (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
             <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
-            <span>{t("product.lowStockWarning", { count: product.stock })}</span>
+            <span>{formatUnitsLeft(product.stock, t, locale)}</span>
           </div>
         ) : (
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             <span className="size-2 rounded-full bg-emerald-500" />
-            <span>{t("product.readyToDispatch")}</span>
+            <span>{formatUnitsLeft(product.stock, t, locale)}</span>
           </div>
         )}
       </div>

@@ -4,7 +4,6 @@ import React from "react";
 import Image from "next/image";
 import {
   MapPin,
-  CreditCard,
   Banknote,
   Smartphone,
   Wallet,
@@ -64,15 +63,13 @@ export function CheckoutReviewStep({
     cod: t("checkout.codTitle"),
     instapay: t("checkout.instapayTitle"),
     vodafone_cash: t("checkout.vodafoneTitle"),
-    online: t("checkout.onlineTitle"),
-  }[paymentMethod];
+  }[paymentMethod as "cod" | "instapay" | "vodafone_cash"] ?? paymentMethod;
 
   const PaymentIcon = {
     cod: Banknote,
     instapay: Smartphone,
     vodafone_cash: Wallet,
-    online: CreditCard,
-  }[paymentMethod];
+  }[paymentMethod as "cod" | "instapay" | "vodafone_cash"] ?? Wallet;
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
@@ -154,7 +151,7 @@ export function CheckoutReviewStep({
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <CreditCard className="size-3.5 text-[#FF6B35]" />
+                <Wallet className="size-3.5 text-[#FF6B35]" />
                 {t("checkout.stepPayment")}
               </span>
               <Button
@@ -183,9 +180,7 @@ export function CheckoutReviewStep({
                     ? t("checkout.codDesc")
                     : paymentMethod === "instapay"
                     ? "IPN: printstudio@instapay"
-                    : paymentMethod === "vodafone_cash"
-                    ? "Wallet: 01019882341"
-                    : "Credit / Debit Card"}
+                    : "Wallet: 01019882341"}
                 </p>
               </div>
             </div>

@@ -1,4 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
+import {
+  sanitizePostgrestFilter,
+  escapeIlikePattern,
+} from "@/lib/utils/postgrest";
 
 export interface CatalogProduct {
   id: string;
@@ -11,6 +15,8 @@ export interface CatalogProduct {
   available_colors: string[] | null;
   is_active: boolean;
   is_featured: boolean;
+  width?: number | null;
+  height?: number | null;
   created_at: string;
   category: {
     id: string;
@@ -175,6 +181,8 @@ export async function getCatalogData(params: CatalogQueryParams): Promise<Catalo
         available_colors,
         is_active,
         is_featured,
+        width,
+        height,
         created_at,
         category:categories(id, name, slug),
         images:product_images(id, image_url, alt_text, is_primary, sort_order)
@@ -196,7 +204,8 @@ export async function getCatalogData(params: CatalogQueryParams): Promise<Catalo
     }
 
     if (params.material) {
-      query = query.ilike("material", `%${params.material}%`);
+      const escapedMaterial = escapeIlikePattern(params.material);
+      query = query.ilike("material", `%${escapedMaterial}%`);
     }
 
     if (params.in_stock_only) {
@@ -204,10 +213,12 @@ export async function getCatalogData(params: CatalogQueryParams): Promise<Catalo
     }
 
     if (params.search) {
-      const sanitized = params.search.replace(/[%_]/g, "\\$&");
-      query = query.or(
-        `name.ilike.%${sanitized}%,description.ilike.%${sanitized}%`
-      );
+      const sanitized = sanitizePostgrestFilter(params.search);
+      if (sanitized) {
+        query = query.or(
+          `name.ilike.%${sanitized}%,description.ilike.%${sanitized}%`
+        );
+      }
     }
 
     // 4. Sorting

@@ -10,6 +10,8 @@ export interface HomepageProduct {
   material: string | null;
   available_colors: string[] | null;
   is_featured: boolean;
+  width?: number | null;
+  height?: number | null;
   category?: {
     id: string;
     name: string;
@@ -38,7 +40,7 @@ export async function getFeaturedProducts(): Promise<HomepageProduct[]> {
     const supabase = await createClient();
 
     // Query active products, prioritizing featured items
-    let query = supabase
+    const query = supabase
       .from("products")
       .select(
         `
@@ -51,6 +53,8 @@ export async function getFeaturedProducts(): Promise<HomepageProduct[]> {
         material,
         available_colors,
         is_featured,
+        width,
+        height,
         category:categories(id, name, slug),
         images:product_images(id, image_url, alt_text, is_primary, sort_order)
       `

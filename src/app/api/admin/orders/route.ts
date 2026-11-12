@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
+import { sanitizePostgrestFilter } from "@/lib/utils/postgrest";
+import { parsePaginationParams } from "@/lib/utils/pagination";
 
 export async function GET(request: Request) {
   try {
@@ -11,9 +13,11 @@ export async function GET(request: Request) {
     const { supabase } = auth;
     const { searchParams } = new URL(request.url);
 
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)));
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = parsePaginationParams(searchParams, {
+      defaultPage: 1,
+      defaultLimit: 20,
+      maxLimit: 100,
+    });
 
     const status = searchParams.get("status");
     const paymentStatus = searchParams.get("payment_status");
@@ -51,16 +55,19 @@ export async function GET(request: Request) {
     }
 
     if (search) {
-      // If numeric, check order_number
-      const numericOrderNumber = parseInt(search, 10);
-      if (!isNaN(numericOrderNumber)) {
-        query = query.or(
-          `order_number.eq.${numericOrderNumber},customer_phone.ilike.%${search}%,customer_first_name.ilike.%${search}%,customer_last_name.ilike.%${search}%`
-        );
-      } else {
-        query = query.or(
-          `customer_first_name.ilike.%${search}%,customer_last_name.ilike.%${search}%,customer_phone.ilike.%${search}%,customer_email.ilike.%${search}%`
-        );
+      const sanitized = sanitizePostgrestFilter(search);
+      if (sanitized) {
+        // If numeric, check order_number
+        const numericOrderNumber = parseInt(sanitized, 10);
+        if (!isNaN(numericOrderNumber) && String(numericOrderNumber) === sanitized) {
+          query = query.or(
+            `order_number.eq.${numericOrderNumber},customer_phone.ilike.%${sanitized}%,customer_first_name.ilike.%${sanitized}%,customer_last_name.ilike.%${sanitized}%`
+          );
+        } else {
+          query = query.or(
+            `customer_first_name.ilike.%${sanitized}%,customer_last_name.ilike.%${sanitized}%,customer_phone.ilike.%${sanitized}%,customer_email.ilike.%${sanitized}%`
+          );
+        }
       }
     }
 

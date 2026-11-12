@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireCustomer } from "@/lib/auth/customer";
-import { requireAdmin } from "@/lib/auth/admin";
+import { requireCustomerOrAdmin } from "@/lib/auth";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -10,20 +9,12 @@ export async function GET(request: Request, context: RouteContext) {
   try {
     const { id: orderId } = await context.params;
 
-    // Check if customer or admin
-    let auth = await requireCustomer(request);
-    let isAdmin = false;
-
+    const auth = await requireCustomerOrAdmin(request);
     if (!auth.authorized) {
-      const adminAuth = await requireAdmin(request);
-      if (!adminAuth.authorized) {
-        return auth.response;
-      }
-      isAdmin = true;
-      auth = adminAuth;
+      return auth.response;
     }
 
-    const { user, supabase } = auth;
+    const { user, supabase, isAdmin } = auth;
 
     // Retrieve order to verify ownership
     const { data: order, error: orderError } = await supabase

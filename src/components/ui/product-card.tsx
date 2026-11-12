@@ -7,6 +7,8 @@ import { ShoppingBag, Eye, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DimensionIndicators } from "@/components/ui/dimension-indicators";
+import { LOW_STOCK_THRESHOLD, formatUnitsLeft } from "@/lib/constants/inventory";
 import { useTranslation } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +25,8 @@ export interface ProductCardProps {
   availableColors?: string[];
   categoryName?: string;
   isFeatured?: boolean;
+  width?: number | null;
+  height?: number | null;
   onAddToCart?: (id: string, color?: string) => void;
   onQuickView?: (id: string) => void;
   className?: string;
@@ -41,6 +45,8 @@ export function ProductCard({
   availableColors = [],
   categoryName,
   isFeatured = false,
+  width,
+  height,
   onAddToCart,
   onQuickView,
   className,
@@ -50,10 +56,10 @@ export function ProductCard({
     availableColors[0]
   );
   const [isFavorited, setIsFavorited] = useState(false);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const isOutOfStock = stockQuantity <= 0;
-  const isLowStock = stockQuantity > 0 && stockQuantity <= 3;
+  const isLowStock = stockQuantity > 0 && stockQuantity <= LOW_STOCK_THRESHOLD;
   const displayCurrency = currency || t("common.egp");
 
   return (
@@ -83,9 +89,18 @@ export function ProductCard({
             </Badge>
           ) : isLowStock ? (
             <Badge variant="warning" size="sm" dot pulse>
-              {t("common.lowStock", { count: stockQuantity })}
+              {formatUnitsLeft(stockQuantity, t, locale)}
             </Badge>
-          ) : null}
+          ) : (
+            <Badge
+              variant="secondary"
+              size="sm"
+              dot
+              className="bg-background/80 backdrop-blur-xs text-foreground/90 border-border/80"
+            >
+              {formatUnitsLeft(stockQuantity, t, locale)}
+            </Badge>
+          )}
         </div>
 
         {/* Favorite Button */}
@@ -125,6 +140,9 @@ export function ProductCard({
             </div>
           )}
         </Link>
+
+        {/* Product Physical Dimensions Overlay */}
+        <DimensionIndicators width={width} height={height} variant="card" />
 
         {/* Quick View Button on Hover */}
         {onQuickView && (

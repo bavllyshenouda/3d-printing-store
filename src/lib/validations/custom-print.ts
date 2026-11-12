@@ -77,21 +77,67 @@ export const createCustomPrintRequestSchema = z.object({
     .number()
     .int("Quantity must be a whole number")
     .min(1, "Quantity must be at least 1")
+    .max(1000, "Quantity cannot exceed 1000")
     .default(1),
-  preferred_material: z.string().trim().optional().nullable(),
-  preferred_color: z.string().trim().optional().nullable(),
-  reference_url: z.string().trim().url("Invalid reference URL").optional().nullable().or(z.literal("")),
+  preferred_material: z
+    .string()
+    .trim()
+    .max(100, "Preferred material cannot exceed 100 characters")
+    .optional()
+    .nullable(),
+  preferred_color: z
+    .string()
+    .trim()
+    .max(100, "Preferred color cannot exceed 100 characters")
+    .optional()
+    .nullable(),
+  reference_url: z
+    .string()
+    .trim()
+    .url("Invalid reference URL")
+    .refine(
+      (url) => /^https?:\/\//i.test(url),
+      "Reference URL must use HTTP or HTTPS protocol"
+    )
+    .optional()
+    .nullable()
+    .or(z.literal("")),
   customer_notes: z.string().trim().max(1000).optional().nullable(),
 });
 
 export const adminCreateQuoteSchema = z.object({
-  description: z.string().trim().min(5, "Quote description must be at least 5 characters"),
-  material: z.string().trim().optional().nullable(),
-  color: z.string().trim().optional().nullable(),
-  quantity: z.number().int().min(1, "Quantity must be at least 1"),
-  unit_price: z.number().min(0, "Unit price cannot be negative"),
-  estimated_days: z.number().int().min(1, "Estimated days must be at least 1").default(3),
-  valid_days: z.number().int().min(1, "Validity period must be at least 1 day").default(7),
+  description: z
+    .string()
+    .trim()
+    .min(5, "Quote description must be at least 5 characters")
+    .max(2000, "Quote description cannot exceed 2000 characters"),
+  material: z.string().trim().max(100, "Material cannot exceed 100 characters").optional().nullable(),
+  color: z.string().trim().max(100, "Color cannot exceed 100 characters").optional().nullable(),
+  quantity: z
+    .number()
+    .int("Quantity must be a whole number")
+    .min(1, "Quantity must be at least 1")
+    .max(10000, "Quantity cannot exceed 10,000"),
+  unit_price: z
+    .number()
+    .min(0, "Unit price cannot be negative")
+    .max(1000000, "Unit price cannot exceed 1,000,000")
+    .refine(
+      (val) => Number(val.toFixed(2)) === val,
+      "Unit price can have at most 2 decimal places"
+    ),
+  estimated_days: z
+    .number()
+    .int("Estimated days must be a whole number")
+    .min(1, "Estimated days must be at least 1")
+    .max(365, "Estimated days cannot exceed 365")
+    .default(3),
+  valid_days: z
+    .number()
+    .int("Validity period must be a whole number")
+    .min(1, "Validity period must be at least 1 day")
+    .max(365, "Validity period cannot exceed 365 days")
+    .default(7),
   status: z.enum(["draft", "sent"]).default("sent"),
 });
 
@@ -100,18 +146,23 @@ export const adminRejectRequestSchema = z.object({
     .string()
     .trim()
     .min(3, "Rejection reason must be at least 3 characters")
-    .max(1000, "Rejection reason cannot exceed 1000 characters"),
+    .max(500, "Rejection reason cannot exceed 500 characters"),
 });
 
 export const acceptQuoteSchema = z
   .object({
     address_id: z.string().uuid("Invalid address ID format").optional(),
     address: addressSchema.optional(),
-    payment_method: z.enum(["cod", "instapay", "vodafone_cash", "online"], {
-      message: "Payment method must be one of: cod, instapay, vodafone_cash, online",
+    // TODO(db): Update database CHECK constraint and RPC validation to remove "online" payment method
+    payment_method: z.enum(["cod", "instapay", "vodafone_cash"], {
+      message: "Payment method must be one of: cod, instapay, vodafone_cash",
     }),
-    shipping_fee: z.number().nonnegative().default(50),
-    address_notes: z.string().trim().optional().nullable(),
+    address_notes: z
+      .string()
+      .trim()
+      .max(500, "Address notes cannot exceed 500 characters")
+      .optional()
+      .nullable(),
   })
   .refine(
     (data) => Boolean(data.address_id || data.address),
@@ -122,7 +173,12 @@ export const acceptQuoteSchema = z
   );
 
 export const rejectQuoteSchema = z.object({
-  reason: z.string().trim().min(3, "Rejection reason must be at least 3 characters").default("Customer declined quote terms"),
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Rejection reason must be at least 3 characters")
+    .max(500, "Rejection reason cannot exceed 500 characters")
+    .default("Customer declined quote terms"),
 });
 
 export type CreateCustomPrintRequestInput = z.infer<typeof createCustomPrintRequestSchema>;

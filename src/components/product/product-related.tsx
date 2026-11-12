@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { ProductCard } from "@/components/ui/product-card";
 import { CatalogProduct } from "@/lib/data/catalog";
 import { useTranslation } from "@/lib/i18n/context";
@@ -13,6 +14,7 @@ export interface ProductRelatedProps {
 }
 
 export function ProductRelated({ products, className }: ProductRelatedProps) {
+  const router = useRouter();
   const { t, locale } = useTranslation();
 
   if (!products || products.length === 0) {
@@ -65,10 +67,12 @@ export function ProductRelated({ products, className }: ProductRelatedProps) {
                 availableColors={product.available_colors || []}
                 categoryName={localizedCategory}
                 isFeatured={product.is_featured}
+                width={product.width}
+                height={product.height}
                 primaryImageUrl={primaryImg}
                 secondaryImageUrl={secondaryImg}
                 onAddToCart={() => {
-                  window.location.href = `/products/${product.slug}`;
+                  router.push(`/products/${product.slug}`);
                 }}
               />
             );

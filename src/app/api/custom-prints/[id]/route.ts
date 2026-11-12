@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireCustomer } from "@/lib/auth/customer";
-import { requireAdmin } from "@/lib/auth/admin";
+import { requireCustomerOrAdmin } from "@/lib/auth";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -10,19 +9,12 @@ export async function GET(request: Request, context: RouteContext) {
   try {
     const { id: requestId } = await context.params;
 
-    // Resolve admin FIRST. An admin is also an authenticated user, so calling
-    // requireCustomer first would succeed and leave isAdmin = false, which scopes
-    // the query below to the admin's own user_id and makes every customer request
-    // return 404 ("Request Not Found"). Admins must be able to read any request.
-    const adminAuth = await requireAdmin(request);
-    const isAdmin = adminAuth.authorized;
-    const auth = isAdmin ? adminAuth : await requireCustomer(request);
-
+    const auth = await requireCustomerOrAdmin(request);
     if (!auth.authorized) {
       return auth.response;
     }
 
-    const { user, supabase } = auth;
+    const { user, supabase, isAdmin } = auth;
 
     let query = supabase
       .from("custom_print_requests")

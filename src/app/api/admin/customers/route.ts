@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
+import { sanitizePostgrestFilter } from "@/lib/utils/postgrest";
+import { parsePaginationParams } from "@/lib/utils/pagination";
 
 export async function GET(request: Request) {
   try {
@@ -11,9 +13,11 @@ export async function GET(request: Request) {
     const { supabase } = auth;
     const { searchParams } = new URL(request.url);
 
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)));
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = parsePaginationParams(searchParams, {
+      defaultPage: 1,
+      defaultLimit: 20,
+      maxLimit: 100,
+    });
     const search = searchParams.get("search")?.trim();
 
     let query = supabase
@@ -25,9 +29,12 @@ export async function GET(request: Request) {
       .range(offset, offset + limit - 1);
 
     if (search) {
-      query = query.or(
-        `first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`
-      );
+      const sanitized = sanitizePostgrestFilter(search);
+      if (sanitized) {
+        query = query.or(
+          `first_name.ilike.%${sanitized}%,last_name.ilike.%${sanitized}%,email.ilike.%${sanitized}%,phone.ilike.%${sanitized}%`
+        );
+      }
     }
 
     const { data: profiles, error, count } = await query;

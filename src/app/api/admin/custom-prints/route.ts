@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
+import { parsePaginationParams } from "@/lib/utils/pagination";
 
 export async function GET(request: Request) {
   try {
@@ -11,9 +12,11 @@ export async function GET(request: Request) {
     const { supabase } = auth;
     const { searchParams } = new URL(request.url);
 
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)));
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = parsePaginationParams(searchParams, {
+      defaultPage: 1,
+      defaultLimit: 20,
+      maxLimit: 100,
+    });
     const status = searchParams.get("status");
 
     let query = supabase
