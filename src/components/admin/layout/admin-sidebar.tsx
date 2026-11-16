@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -16,7 +17,6 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
   X,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/context";
@@ -100,13 +100,17 @@ export function AdminSidebar({
           className="flex items-center gap-2.5 group overflow-hidden"
           onClick={onMobileClose}
         >
-          <div className="size-9 rounded-xl bg-gradient-to-br from-[#FF6B35] to-[#E0531A] flex items-center justify-center shadow-lg shadow-[#FF6B35]/20 group-hover:scale-105 transition-transform shrink-0">
-            <ShieldCheck className="size-5 text-white" />
-          </div>
+          <Image
+            src="/trio_logo.svg"
+            alt="Trio"
+            width={36}
+            height={30}
+            className="h-8 w-auto brightness-0 invert group-hover:scale-105 transition-transform shrink-0"
+          />
           {!collapsed && (
             <div className="flex flex-col min-w-0">
               <span className="font-heading font-black text-sm tracking-tight text-white uppercase truncate">
-                PRINT STUDIO
+                TRIO
               </span>
               <span className="text-[10px] font-mono tracking-widest text-[#FF6B35] font-semibold uppercase">
                 OPS CONSOLE

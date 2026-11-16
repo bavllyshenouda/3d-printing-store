@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { CategoriesTable } from "@/components/admin/categories/categories-table";
 
 export const metadata: Metadata = {
-  title: "Categories Management | PRINT STUDIO Ops",
+  title: "Categories Management | Trio Ops",
   description: "Category taxonomy and product classification administration.",
 };
 

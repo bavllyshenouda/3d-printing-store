@@ -2,9 +2,9 @@ import { Metadata } from "next";
 import { ProfileView } from "@/components/profile/profile-view";
 
 export const metadata: Metadata = {
-  title: "My Profile | PrintStudio 3D",
+  title: "My Profile | Trio",
   description:
-    "View and update your PrintStudio customer profile, phone number, and contact details.",
+    "View and update your Trio customer profile, phone number, and contact details.",
 };
 
 export default function ProfilePage() {

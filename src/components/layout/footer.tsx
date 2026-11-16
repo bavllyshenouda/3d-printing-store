@@ -1,43 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Layers,
-  ArrowRight,
   ShieldCheck,
   Zap,
-  Check,
   Phone,
   Mail,
   MapPin,
 } from "lucide-react";
 import { Container } from "@/components/layout/container";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/toast";
+import { CustomPrintLink } from "@/components/common/custom-print-link";
 import { useTranslation } from "@/lib/i18n/context";
 
 export function Footer() {
   const pathname = usePathname();
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
   const { t } = useTranslation();
 
   if (pathname.startsWith("/admin")) {
     return null;
   }
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !email.includes("@")) {
-      toast.error(t("common.error"), "Please enter a valid email address");
-      return;
-    }
-    setSubscribed(true);
-    toast.success(t("footer.subscribed"), t("footer.newsletterDesc"));
-  };
 
   return (
     <footer className="w-full bg-[#111318] text-white border-t border-white/10 mt-auto">
@@ -104,19 +89,23 @@ export function Footer() {
         </Container>
       </div>
 
-      {/* Main Footer Links & Newsletter */}
+      {/* Main Footer Links */}
       <div className="py-16 sm:py-20">
         <Container size="xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
             {/* Brand Column */}
             <div className="lg:col-span-2 space-y-4">
-              <Link href="/" className="flex items-center gap-2.5">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-white/10 border border-white/10 text-[#FF6B35]">
-                  <Layers className="size-5" />
-                </div>
+              <Link href="/" className="flex items-center gap-2.5 group">
+                <Image
+                  src="/trio_logo.svg"
+                  alt="Trio"
+                  width={38}
+                  height={32}
+                  className="h-8 sm:h-9 w-auto brightness-0 invert transition-transform duration-300 group-hover:scale-105 shrink-0"
+                />
                 <div className="flex flex-col">
                   <span className="font-heading text-lg font-black tracking-tight text-white leading-none">
-                    PRINT<span className="text-[#FF6B35]">STUDIO</span>
+                    TRIO
                   </span>
                   <span className="text-[10px] font-mono tracking-widest text-gray-400 uppercase">
                     {t("common.brandTagline")}
@@ -135,7 +124,12 @@ export function Footer() {
                 </p>
                 <p className="flex items-center gap-2">
                   <Mail className="size-3.5 text-[#FF6B35] shrink-0" />
-                  <span>{t("footer.email")}</span>
+                  <a
+                    href={`mailto:${t("footer.email")}`}
+                    className="hover:text-white transition-colors underline-offset-2 hover:underline"
+                  >
+                    {t("footer.email")}
+                  </a>
                 </p>
               </div>
             </div>
@@ -181,34 +175,17 @@ export function Footer() {
               </h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>
-                  <Link href="/custom-prints" className="hover:text-white transition-colors text-[#FF6B35]">
+                  <CustomPrintLink
+                    href="/custom-prints"
+                    className="hover:text-white transition-colors text-[#FF6B35]"
+                  >
                     {t("footer.requestQuote")}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/materials" className="hover:text-white transition-colors">
-                    {t("footer.filamentProperties")}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/custom-prints/guidelines" className="hover:text-white transition-colors">
-                    {t("footer.guidelines")}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/custom-prints/slicing" className="hover:text-white transition-colors">
-                    {t("footer.slicingOptions")}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/custom-prints/bulk" className="hover:text-white transition-colors">
-                    {t("footer.batchManufacturing")}
-                  </Link>
+                  </CustomPrintLink>
                 </li>
               </ul>
             </div>
 
-            {/* Orders & Help */}
+            {/* Orders */}
             <div className="space-y-3">
               <h4 className="font-heading text-xs font-bold uppercase tracking-wider text-white">
                 {t("footer.ordersCol")}
@@ -219,63 +196,7 @@ export function Footer() {
                     {t("footer.trackOrder")}
                   </Link>
                 </li>
-                <li>
-                  <Link href="/payments/guide" className="hover:text-white transition-colors">
-                    {t("footer.paymentsGuide")}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/shipping" className="hover:text-white transition-colors">
-                    {t("footer.shipping")}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/faq" className="hover:text-white transition-colors">
-                    {t("footer.faq")}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/terms" className="hover:text-white transition-colors">
-                    {t("footer.terms")}
-                  </Link>
-                </li>
               </ul>
-            </div>
-
-            {/* Newsletter Column */}
-            <div className="space-y-3">
-              <h4 className="font-heading text-xs font-bold uppercase tracking-wider text-white">
-                {t("footer.newsletterCol")}
-              </h4>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                {t("footer.newsletterDesc")}
-              </p>
-
-              {subscribed ? (
-                <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 text-xs text-emerald-400">
-                  <Check className="size-4 shrink-0" />
-                  <span>{t("footer.subscribed")}</span>
-                </div>
-              ) : (
-                <form onSubmit={handleSubscribe} className="space-y-2">
-                  <Input
-                    type="email"
-                    placeholder={t("footer.newsletterPlaceholder")}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 text-xs py-2"
-                  />
-                  <Button
-                    type="submit"
-                    variant="default"
-                    size="sm"
-                    className="w-full text-xs justify-center"
-                    iconRight={<ArrowRight className="size-3 rtl:rotate-180" />}
-                  >
-                    {t("footer.subscribe")}
-                  </Button>
-                </form>
-              )}
             </div>
           </div>
         </Container>

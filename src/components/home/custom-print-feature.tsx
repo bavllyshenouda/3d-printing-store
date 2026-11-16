@@ -12,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/layout/container";
+import { CUSTOM_PRINTS_ENABLED } from "@/lib/config/features";
+import { CustomPrintLink } from "@/components/common/custom-print-link";
 import { useTranslation } from "@/lib/i18n/context";
 
 export function CustomPrintFeature() {
@@ -101,17 +103,27 @@ export function CustomPrintFeature() {
 
             {/* Direct CTA Button */}
             <div className="pt-4">
-              <Button
-                variant="default"
-                size="lg"
-                iconRight={<ArrowRight className="size-4 rtl:rotate-180" />}
-                asChild
-              >
-                <Link href="/custom-prints" className="flex items-center gap-2">
-                  <UploadCloud className="size-5" />
+              {CUSTOM_PRINTS_ENABLED ? (
+                <Button
+                  variant="default"
+                  size="lg"
+                  iconRight={<ArrowRight className="size-4 rtl:rotate-180" />}
+                  asChild
+                >
+                  <Link href="/custom-prints" className="flex items-center gap-2">
+                    <UploadCloud className="size-5" />
+                    <span>{t("customPrint.cta")}</span>
+                  </Link>
+                </Button>
+              ) : (
+                <CustomPrintLink
+                  href="/custom-prints"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 px-6 py-3.5 text-sm font-semibold text-white transition-colors"
+                >
+                  <UploadCloud className="size-5 text-[#FF6B35]" />
                   <span>{t("customPrint.cta")}</span>
-                </Link>
-              </Button>
+                </CustomPrintLink>
+              )}
             </div>
           </div>
 
@@ -201,16 +213,25 @@ export function CustomPrintFeature() {
 
               {/* Upload Dropzone Preview Link */}
               <div className="mt-5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-white/20 text-white hover:bg-white/10 justify-center"
-                  asChild
-                >
-                  <Link href="/custom-prints">
-                    {t("customPrint.portalCta")}
-                  </Link>
-                </Button>
+                {CUSTOM_PRINTS_ENABLED ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-white/20 text-white hover:bg-white/10 justify-center"
+                    asChild
+                  >
+                    <Link href="/custom-prints">
+                      {t("customPrint.portalCta")}
+                    </Link>
+                  </Button>
+                ) : (
+                  <CustomPrintLink
+                    href="/custom-prints"
+                    className="w-full justify-center text-center py-2.5 rounded-lg border border-white/20 text-white text-xs font-semibold hover:bg-white/5 transition-colors"
+                  >
+                    <span>{t("customPrint.portalCta")}</span>
+                  </CustomPrintLink>
+                )}
               </div>
             </div>
           </div>

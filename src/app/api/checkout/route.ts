@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireCustomer } from "@/lib/auth/customer";
 import { checkoutSchema } from "@/lib/validations/order";
-import { getShippingFee } from "@/lib/constants/governorates";
+import { getGovernorate } from "@/lib/constants/governorates";
+import { translate } from "@/lib/i18n";
 
 export async function POST(request: Request) {
   try {
@@ -91,34 +92,6 @@ export async function POST(request: Request) {
       resolvedFloor = address.floor || null;
       resolvedApartment = address.apartment || null;
       resolvedNotes = address_notes || address.notes || null;
-
-      // Optionally save to customer's address book
-      if (save_address) {
-        if (address.is_default) {
-          await supabase
-            .from("customer_addresses")
-            .update({ is_default: false, updated_at: new Date().toISOString() })
-            .eq("user_id", user.id)
-            .eq("is_default", true);
-        }
-
-        await supabase.from("customer_addresses").insert({
-          user_id: user.id,
-          first_name: address.first_name,
-          last_name: address.last_name,
-          phone: address.phone,
-          email: resolvedEmail,
-          country: address.country || "Egypt",
-          governorate: address.governorate,
-          region: address.region,
-          street_address: address.street_address,
-          building: address.building || null,
-          floor: address.floor || null,
-          apartment: address.apartment || null,
-          notes: address.notes || null,
-          is_default: address.is_default,
-        });
-      }
     }
 
     // 4. Verify cart has items before invoking RPC
@@ -145,7 +118,26 @@ export async function POST(request: Request) {
     }
 
     // 5. Server-authoritative shipping fee and discount calculation
-    const shippingFee = getShippingFee(resolvedGovernorate);
+    const gov = getGovernorate(resolvedGovernorate);
+    if (!gov) {
+      const cookieHeader = request.headers.get("cookie") || "";
+      const isArabic =
+        cookieHeader.includes("NEXT_LOCALE=ar") ||
+        (request.headers.get("accept-language")?.startsWith("ar") ?? false);
+      const errorMsg = isArabic
+        ? translate("ar", "checkout.invalidGovernorate")
+        : translate("en", "checkout.invalidGovernorate");
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: errorMsg,
+        },
+        { status: 400 }
+      );
+    }
+
+    const shippingFee = gov.shippingFee;
 
     // TODO(db): Validate and apply coupons/discounts inside the database RPC once a coupon system is implemented
     const discountAmount = 0;
@@ -189,6 +181,34 @@ export async function POST(request: Request) {
         },
         { status: isBusinessRuleError ? 400 : 500 }
       );
+    }
+
+    // 7. Save customer address only AFTER the checkout RPC succeeds
+    if (address && save_address) {
+      if (address.is_default) {
+        await supabase
+          .from("customer_addresses")
+          .update({ is_default: false, updated_at: new Date().toISOString() })
+          .eq("user_id", user.id)
+          .eq("is_default", true);
+      }
+
+      await supabase.from("customer_addresses").insert({
+        user_id: user.id,
+        first_name: address.first_name,
+        last_name: address.last_name,
+        phone: address.phone,
+        email: resolvedEmail,
+        country: address.country || "Egypt",
+        governorate: address.governorate,
+        region: address.region,
+        street_address: address.street_address,
+        building: address.building || null,
+        floor: address.floor || null,
+        apartment: address.apartment || null,
+        notes: address.notes || null,
+        is_default: address.is_default,
+      });
     }
 
     // Retrieve the created order with line items and shipping event snapshot

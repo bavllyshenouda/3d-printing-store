@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireCustomer } from "@/lib/auth/customer";
 import { acceptQuoteSchema } from "@/lib/validations/custom-print";
-import { getShippingFee } from "@/lib/constants/governorates";
+import { getGovernorate } from "@/lib/constants/governorates";
+import { translate } from "@/lib/i18n";
 
 interface RouteContext {
   params: Promise<{ id: string; quoteId: string }>;
@@ -9,7 +10,7 @@ interface RouteContext {
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    const { id: requestId, quoteId } = await context.params;
+    const { quoteId } = await context.params;
 
     // 1. Authenticate customer
     const auth = await requireCustomer(request);
@@ -97,8 +98,27 @@ export async function POST(request: Request, context: RouteContext) {
       resolvedNotes = address_notes || address.notes || null;
     }
 
-    // 3.5. Compute server-authoritative shipping fee based on resolved governorate
-    const shippingFee = getShippingFee(resolvedGovernorate);
+    // 3.5. Validate governorate against known Egyptian governorates list
+    const gov = getGovernorate(resolvedGovernorate);
+    if (!gov) {
+      const cookieHeader = request.headers.get("cookie") || "";
+      const isArabic =
+        cookieHeader.includes("NEXT_LOCALE=ar") ||
+        (request.headers.get("accept-language")?.startsWith("ar") ?? false);
+      const errorMsg = isArabic
+        ? translate("ar", "checkout.invalidGovernorate")
+        : translate("en", "checkout.invalidGovernorate");
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: errorMsg,
+        },
+        { status: 400 }
+      );
+    }
+
+    const shippingFee = gov.shippingFee;
 
     // 4. Invoke atomic RPC to accept quote and create order
     // Validates quote ownership, expiration, status, creates order and order_items atomically.

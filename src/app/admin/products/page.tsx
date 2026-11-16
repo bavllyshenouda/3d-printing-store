@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ProductsTable } from "@/components/admin/products/products-table";
 
 export const metadata: Metadata = {
-  title: "Products Management | PRINT STUDIO Ops",
+  title: "Products Management | Trio Ops",
   description: "Product catalog inventory, pricing, and visibility administration.",
 };
 

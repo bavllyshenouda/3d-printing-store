@@ -3,9 +3,9 @@ import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = {
-  title: "Sign In | PrintStudio 3D",
+  title: "Sign In | Trio",
   description:
-    "Sign in to your PrintStudio account to manage your 3D prints, custom CAD quotes, and orders.",
+    "Sign in to your Trio account to manage your 3D prints, custom CAD quotes, and orders.",
 };
 
 export default function LoginPage() {

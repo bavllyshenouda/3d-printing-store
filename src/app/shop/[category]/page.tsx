@@ -26,8 +26,8 @@ export async function generateMetadata({
   const matched = categories.find((c) => c.slug === category);
 
   const title = matched
-    ? `${matched.name} | PrintStudio Catalog`
-    : "3D Printed Models Catalog | PrintStudio";
+    ? `${matched.name} | Trio Catalog`
+    : "3D Printed Models Catalog | Trio";
 
   return {
     title,

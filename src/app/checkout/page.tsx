@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { CheckoutView } from "@/components/checkout/checkout-view";
 
 export const metadata: Metadata = {
-  title: "Checkout | PrintStudio",
+  title: "Checkout | Trio",
   description: "Secure engineering checkout for precision 3D printing orders and rapid local delivery.",
 };
 

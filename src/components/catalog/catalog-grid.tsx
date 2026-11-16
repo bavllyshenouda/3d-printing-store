@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
+import { CUSTOM_PRINTS_ENABLED } from "@/lib/config/features";
 import { CatalogProduct } from "@/lib/data/catalog";
 import { useTranslation } from "@/lib/i18n/context";
 import { getLocalizedField } from "@/lib/i18n";
@@ -112,15 +113,17 @@ export function CatalogGrid({
             )
           }
           secondaryAction={
-            <Link href="/custom-prints">
-              <Button
-                variant="outline"
-                size="default"
-                iconLeft={<UploadCloud className="size-4 text-[#FF6B35]" />}
-              >
-                {t("catalog.customPrintCta")}
-              </Button>
-            </Link>
+            CUSTOM_PRINTS_ENABLED ? (
+              <Link href="/custom-prints">
+                <Button
+                  variant="outline"
+                  size="default"
+                  iconLeft={<UploadCloud className="size-4 text-[#FF6B35]" />}
+                >
+                  {t("catalog.customPrintCta")}
+                </Button>
+              </Link>
+            ) : undefined
           }
         />
       </div>

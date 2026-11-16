@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CartItemRow } from "./cart-item-row";
 import { CartSummaryCard } from "./cart-summary";
+import { CUSTOM_PRINTS_ENABLED } from "@/lib/config/features";
 import { useCart } from "@/lib/cart/context";
 import { useTranslation } from "@/lib/i18n/context";
 
@@ -65,15 +66,17 @@ export function CartView() {
               </Link>
             }
             secondaryAction={
-              <Link href="/custom-prints">
-                <Button
-                  variant="outline"
-                  size="default"
-                  iconLeft={<UploadCloud className="size-4 text-[#FF6B35]" />}
-                >
-                  {t("common.requestCustomPrint")}
-                </Button>
-              </Link>
+              CUSTOM_PRINTS_ENABLED ? (
+                <Link href="/custom-prints">
+                  <Button
+                    variant="outline"
+                    size="default"
+                    iconLeft={<UploadCloud className="size-4 text-[#FF6B35]" />}
+                  >
+                    {t("common.requestCustomPrint")}
+                  </Button>
+                </Link>
+              ) : undefined
             }
           />
         </Container>

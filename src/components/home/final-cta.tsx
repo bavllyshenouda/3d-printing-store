@@ -5,10 +5,15 @@ import Link from "next/link";
 import { ArrowRight, UploadCloud, Box, Zap, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
+import { CUSTOM_PRINTS_ENABLED } from "@/lib/config/features";
 import { useTranslation } from "@/lib/i18n/context";
 
 export function FinalCta() {
   const { t } = useTranslation();
+
+  if (!CUSTOM_PRINTS_ENABLED) {
+    return null;
+  }
 
   return (
     <section className="py-20 sm:py-28 relative overflow-hidden bg-background">

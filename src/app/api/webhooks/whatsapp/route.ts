@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   defaultWhatsAppProvider,
   InboundMessageEvent,
@@ -133,9 +134,26 @@ export async function POST(request: Request) {
     }
 
     // Always return 200 quickly for valid-signature payloads even if one event fails (log the error)
+    const supabase = createAdminClient();
     const results = [];
     for (const event of events) {
       try {
+        if (event.providerMessageId) {
+          const { data: alreadyProcessed } = await supabase
+            .from("whatsapp_messages")
+            .select("id")
+            .eq("provider_message_id", event.providerMessageId)
+            .maybeSingle();
+
+          if (alreadyProcessed) {
+            results.push({
+              status: "already_processed",
+              message_id: alreadyProcessed.id,
+            });
+            continue;
+          }
+        }
+
         const result = await processInboundWhatsAppMessage(event);
         results.push(result);
       } catch (eventErr) {

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { OrdersTable } from "@/components/admin/orders/orders-table";
 
 export const metadata: Metadata = {
-  title: "Orders Management | PRINT STUDIO Ops",
+  title: "Orders Management | Trio Ops",
   description: "Fulfillment operations, order pipeline, and shipping tracking.",
 };
 

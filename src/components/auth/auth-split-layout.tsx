@@ -2,10 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import { Layers, CheckCircle2, Zap, ArrowRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
+import { CheckCircle2 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/context";
-import { cn } from "@/lib/utils";
 
 export interface AuthSplitLayoutProps {
   children: React.ReactNode;
@@ -52,12 +51,16 @@ export function AuthSplitLayout({
           {/* Top Brand & Status */}
           <div className="relative z-10 space-y-4">
             <Link href="/" className="inline-flex items-center gap-2.5 group">
-              <div className="flex size-9 items-center justify-center rounded-xl bg-white/10 text-white border border-white/10 transition-transform duration-300 group-hover:scale-105">
-                <Layers className="size-5 text-[#FF6B35]" />
-              </div>
+              <Image
+                src="/trio_logo.svg"
+                alt="Trio"
+                width={38}
+                height={32}
+                className="h-8 sm:h-9 w-auto brightness-0 invert transition-transform duration-300 group-hover:scale-105 shrink-0"
+              />
               <div className="flex flex-col">
                 <span className="font-heading text-lg font-black tracking-tight text-white leading-none">
-                  PRINT<span className="text-[#FF6B35]">STUDIO</span>
+                  TRIO
                 </span>
                 <span className="text-[10px] font-mono tracking-widest text-gray-400 uppercase">
                   {t("auth.splitBadge")}
@@ -93,10 +96,10 @@ export function AuthSplitLayout({
             </div>
           </div>
 
-          {/* Bottom Telemetry Ticker Note */}
+          {/* Bottom Store Note */}
           <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-gray-400">
-            <span>Bambu Farm #01-#12</span>
-            <span className="text-emerald-400">Online · Ready</span>
+            <span>Trio 3D Store</span>
+            <span className="text-emerald-400">Delivering Across Egypt</span>
           </div>
         </div>
 

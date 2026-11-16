@@ -14,9 +14,9 @@ import { CartProvider } from "@/lib/cart/context";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 
 export const metadata: Metadata = {
-  title: "PRINT STUDIO 3D | Precision 3D Printing & Prototyping",
+  title: "Trio | 3D Printing Store Egypt",
   description:
-    "Industrial-grade 3D printing studio. Functional prototyping, engineering filaments (PETG-CF, ABS, Nylon), 8K Resin, and rapid on-demand manufacturing.",
+    "Quality 3D printed products delivered across Egypt. Shop ready-made organizers, accessories, and functional items with cash on delivery, InstaPay, and Vodafone Cash.",
 };
 
 export default async function RootLayout({

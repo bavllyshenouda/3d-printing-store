@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { OrdersListView } from "@/components/orders/orders-list-view";
 
 export const metadata: Metadata = {
-  title: "My Orders | PrintStudio",
+  title: "My Orders | Trio",
   description: "Track your 3D printing orders, view past jobs, and monitor delivery progress.",
 };
 

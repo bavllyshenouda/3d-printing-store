@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { CustomersTable } from "@/components/admin/customers/customers-table";
 
 export const metadata: Metadata = {
-  title: "Customers Directory | PRINT STUDIO Ops",
+  title: "Customers Directory | Trio Ops",
   description: "Customer accounts, profiles, and order histories.",
 };
 

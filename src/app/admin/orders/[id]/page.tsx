@@ -9,7 +9,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   return {
-    title: `Order Operations #${id.slice(0, 8)} | PRINT STUDIO Ops`,
+    title: `Order Operations #${id.slice(0, 8)} | Trio Ops`,
   };
 }
 

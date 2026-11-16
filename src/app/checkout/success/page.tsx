@@ -5,7 +5,7 @@ import { Container } from "@/components/layout/container";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata: Metadata = {
-  title: "Order Placed Successfully | PrintStudio",
+  title: "Order Placed Successfully | Trio",
   description: "Your 3D printing order has been confirmed and queued for production.",
 };
 

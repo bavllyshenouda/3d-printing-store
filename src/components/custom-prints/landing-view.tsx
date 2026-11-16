@@ -38,19 +38,19 @@ export function LandingView() {
     {
       num: "02",
       title: "Slicing & Optimization",
-      desc: "Hardware engineers inspect geometry, infill density, and stress load orientation.",
+      desc: "We review model geometry, infill density, and print orientation for best results.",
       icon: Cpu,
     },
     {
       num: "03",
       title: "Receive Official Quote",
-      desc: "Review transparent quotation with material specs, exact machine time, and turnaround.",
+      desc: "Review transparent quotation with material options and estimated turnaround.",
       icon: FileCode,
     },
     {
       num: "04",
-      title: "Precision Print & Ship",
-      desc: "Produced on calibrated Bambu X1-Carbon printers and delivered across Egypt in 48-72h.",
+      title: "Print & Deliver",
+      desc: "Carefully printed and delivered to your doorstep anywhere in Egypt.",
       icon: Truck,
     },
   ];
@@ -97,11 +97,11 @@ export function LandingView() {
       badgeColor: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
     },
     {
-      name: "8K SLA Resin",
-      tag: "Ultra-Detail",
+      name: "SLA Resin",
+      tag: "Detailed",
       temp: "60°C",
-      strength: "Micro Precision",
-      desc: "Smooth injection-molded finish with ±0.05mm accuracy for miniatures and dental prototypes.",
+      strength: "Smooth Finish",
+      desc: "Smooth finish with fine details for display pieces, figurines, and miniatures.",
       badgeColor: "bg-cyan-500/10 text-cyan-500 border-cyan-500/30",
     },
   ];
@@ -162,11 +162,11 @@ export function LandingView() {
             <div className="flex items-center gap-4 pt-4 text-xs text-muted-foreground flex-wrap">
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="size-4 text-[#FF6B35]" />
-                <span>NDA & Design IP Protected</span>
+                <span>Confidential & Design IP Protected</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="size-4 text-[#FF6B35]" />
-                <span>24-Hour Quotation Turnaround</span>
+                <span>Fast Quotation Review</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Box className="size-4 text-[#FF6B35]" />
@@ -181,13 +181,13 @@ export function LandingView() {
       <Container size="lg">
         <div className="text-center max-w-xl mx-auto space-y-2 mb-12">
           <Badge variant="outline" className="text-xs py-0.5 px-3 font-semibold">
-            Production Pipeline
+            How It Works
           </Badge>
           <h2 className="font-heading text-2xl sm:text-3xl font-black text-foreground">
-            How Custom Manufacturing Works
+            How Custom 3D Printing Works
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Engineering precision and automated slicing every step of the way.
+            Simple and clear steps from file upload to delivery.
           </p>
         </div>
 
@@ -229,10 +229,10 @@ export function LandingView() {
             Materials Library
           </Badge>
           <h2 className="font-heading text-2xl sm:text-3xl font-black text-foreground">
-            Industrial Filaments & Resins
+            Quality Filaments & Resins
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Calibrated on Bambu X1-Carbon and 8K resin stations for high tolerances.
+            Carefully calibrated settings for clean, durable prints.
           </p>
         </div>
 
@@ -277,10 +277,10 @@ export function LandingView() {
       <Container size="lg">
         <div className="rounded-3xl border border-[#FF6B35]/40 bg-[#FF6B35]/5 p-8 sm:p-12 text-center space-y-5">
           <h2 className="font-heading text-2xl sm:text-3xl font-black text-foreground">
-            Ready to Fabricate Your 3D Part?
+            Ready to Print Your 3D Model?
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto">
-            Upload your STL or 3MF file now. Our engineering team reviews all models within 24 hours.
+            Upload your STL or 3MF file now for a personalized quotation.
           </p>
           <Link href="/custom-prints/new" className="inline-block">
             <Button

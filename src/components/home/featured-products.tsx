@@ -12,6 +12,7 @@ import { Container } from "@/components/layout/container";
 import { Grid } from "@/components/layout/grid";
 import { toast } from "@/components/ui/toast";
 import { HomepageProduct } from "@/lib/data/homepage";
+import { CUSTOM_PRINTS_ENABLED } from "@/lib/config/features";
 import { LOW_STOCK_THRESHOLD, formatUnitsLeft } from "@/lib/constants/inventory";
 import { useTranslation } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
@@ -109,12 +110,14 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
             title={t("featured.emptyTitle")}
             description={t("featured.emptyDesc")}
             action={
-              <Button variant="default" size="sm" asChild>
-                <Link href="/custom-prints" className="flex items-center gap-1.5">
-                  <UploadCloud className="size-4" />
-                  <span>{t("featured.emptyCta")}</span>
-                </Link>
-              </Button>
+              CUSTOM_PRINTS_ENABLED ? (
+                <Button variant="default" size="sm" asChild>
+                  <Link href="/custom-prints" className="flex items-center gap-1.5">
+                    <UploadCloud className="size-4" />
+                    <span>{t("featured.emptyCta")}</span>
+                  </Link>
+                </Button>
+              ) : undefined
             }
           />
         )}
@@ -149,7 +152,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground leading-relaxed">
               {selectedProduct.description ||
-                "Engineered with industrial dimensional tolerances. Calibrated for high mechanical durability and precision layer adhesion."}
+                "Crafted with durable materials and clean layer finishes for reliable daily use."}
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs font-mono">

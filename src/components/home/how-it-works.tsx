@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
+import { CustomPrintLink } from "@/components/common/custom-print-link";
 import { useTranslation } from "@/lib/i18n/context";
 
 export function HowItWorks() {
@@ -25,6 +26,7 @@ export function HowItWorks() {
       subtitle: t("howItWorks.step1Subtitle"),
       description: t("howItWorks.step1Desc"),
       icon: <UploadCloud className="size-6 text-[#FF6B35]" />,
+      isCustomPrint: true,
       action: {
         label: t("howItWorks.step1Cta"),
         href: "/custom-prints",
@@ -38,7 +40,7 @@ export function HowItWorks() {
       icon: <SlidersHorizontal className="size-6 text-[#FF6B35]" />,
       action: {
         label: t("howItWorks.step2Cta"),
-        href: "/materials",
+        href: "/products",
       },
     },
     {
@@ -110,12 +112,22 @@ export function HowItWorks() {
 
               {/* Action Button */}
               <div className="mt-8 pt-4 border-t border-border/50">
-                <Button variant="ghost" size="sm" asChild className="p-0 h-auto text-xs text-[#FF6B35] hover:text-[#E85A26]">
-                  <Link href={item.action.href} className="flex items-center gap-1 font-semibold">
+                {item.isCustomPrint ? (
+                  <CustomPrintLink
+                    href={item.action.href}
+                    className="inline-flex items-center gap-1 font-semibold text-xs text-[#FF6B35] hover:text-[#E85A26]"
+                  >
                     <span>{item.action.label}</span>
                     <ArrowRight className="size-3.5 rtl:rotate-180" />
-                  </Link>
-                </Button>
+                  </CustomPrintLink>
+                ) : (
+                  <Button variant="ghost" size="sm" asChild className="p-0 h-auto text-xs text-[#FF6B35] hover:text-[#E85A26]">
+                    <Link href={item.action.href} className="flex items-center gap-1 font-semibold">
+                      <span>{item.action.label}</span>
+                      <ArrowRight className="size-3.5 rtl:rotate-180" />
+                    </Link>
+                  </Button>
+                )}
               </div>
             </Card>
           ))}

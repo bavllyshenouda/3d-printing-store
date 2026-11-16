@@ -59,6 +59,15 @@ export async function proxy(request: NextRequest) {
     }
   );
 
+  // Helper to copy refreshed auth cookies from supabaseResponse onto every redirect
+  const redirectWithCookies = (url: URL | string) => {
+    const redirectResponse = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie);
+    });
+    return redirectResponse;
+  };
+
   // Authenticate user cryptographically
   const {
     data: { user },
@@ -67,7 +76,7 @@ export async function proxy(request: NextRequest) {
   if (isProtectedRoute && !user) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("redirect", pathname + request.nextUrl.search);
-    return NextResponse.redirect(loginUrl);
+    return redirectWithCookies(loginUrl);
   }
 
   // Admin authorization guard: verify existence in admins table
@@ -79,14 +88,14 @@ export async function proxy(request: NextRequest) {
       .maybeSingle();
 
     if (!adminRecord) {
-      return NextResponse.redirect(new URL("/profile", request.url));
+      return redirectWithCookies(new URL("/profile", request.url));
     }
   }
 
   if (isAuthRoute && user) {
     const redirectParam = request.nextUrl.searchParams.get("redirect");
     const target = safeInternalPath(redirectParam, "/profile");
-    return NextResponse.redirect(new URL(target, request.url));
+    return redirectWithCookies(new URL(target, request.url));
   }
 
   return supabaseResponse;

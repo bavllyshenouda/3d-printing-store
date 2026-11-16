@@ -4,7 +4,7 @@ import { CatalogContainer } from "@/components/catalog/catalog-container";
 import { SortOption } from "@/components/catalog/catalog-sort";
 
 export const metadata: Metadata = {
-  title: "Shop 3D Models & Engineered Parts | PrintStudio",
+  title: "Shop 3D Models & Engineered Parts | Trio",
   description:
     "Explore our verified catalog of precision-calibrated 3D-printed mechanical components, electronics enclosures, studio desk gear, and drone accessories.",
 };

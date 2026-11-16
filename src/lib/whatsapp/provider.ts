@@ -54,8 +54,13 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
   private apiToken = process.env.WHATSAPP_API_TOKEN;
   private phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   private appSecret = process.env.WHATSAPP_APP_SECRET;
-  private isMockMode =
-    process.env.WHATSAPP_MOCK_MODE === "true" || !this.apiToken || !this.phoneNumberId;
+
+  private get isMockMode(): boolean {
+    return (
+      process.env.NODE_ENV === "development" &&
+      process.env.WHATSAPP_MOCK_MODE === "true"
+    );
+  }
 
   /**
    * Cryptographically verifies the incoming HMAC-SHA256 signature from Meta webhook.
@@ -113,13 +118,23 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
       `✅ CONFIRM (or 1) to confirm your order and begin production.\n` +
       `❌ CANCEL (or 2) to cancel this order.`;
 
-    // Simulated / mock delivery if credentials are not configured or mock mode enabled
+    // Simulated / mock delivery strictly for development mode with WHATSAPP_MOCK_MODE=true
     if (this.isMockMode) {
       const mockMessageId = `wamid.mock_${Date.now()}_${Math.random().toString(36).substring(7)}`;
       return {
         success: true,
         providerMessageId: mockMessageId,
         mock: true,
+      };
+    }
+
+    if (!this.apiToken || !this.phoneNumberId) {
+      console.warn(
+        "WhatsApp configuration missing in production: WHATSAPP_API_TOKEN or WHATSAPP_PHONE_NUMBER_ID is not configured. Message delivery failed."
+      );
+      return {
+        success: false,
+        error: "Missing required WhatsApp API credentials in production",
       };
     }
 

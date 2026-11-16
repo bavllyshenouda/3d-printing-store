@@ -4,10 +4,15 @@ import React from "react";
 import Link from "next/link";
 import { UploadCloud, ArrowRight, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CUSTOM_PRINTS_ENABLED } from "@/lib/config/features";
 import { useTranslation } from "@/lib/i18n/context";
 
 export function ProductCustomCta() {
   const { t } = useTranslation();
+
+  if (!CUSTOM_PRINTS_ENABLED) {
+    return null;
+  }
 
   return (
     <div className="relative my-10 overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-r from-muted/60 via-muted/30 to-muted/60 p-6 sm:p-10 shadow-xs">

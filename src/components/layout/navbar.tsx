@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   ShoppingBag,
   Search,
   Menu,
   X,
-  Layers,
   ArrowRight,
   User,
   Box,
@@ -26,6 +26,8 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { useTranslation } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth/context";
 import { useCart } from "@/lib/cart/context";
+import { CUSTOM_PRINTS_ENABLED } from "@/lib/config/features";
+import { CustomPrintLink } from "@/components/common/custom-print-link";
 import { cn } from "@/lib/utils";
 
 export interface NavbarProps {
@@ -72,10 +74,9 @@ export function Navbar({
       label: t("nav.customPrint"),
       href: "/custom-prints",
       badge: t("common.instantQuote"),
+      isCustomPrint: true,
     },
-    { label: t("nav.materials"), href: "/materials" },
     { label: t("nav.trackOrder"), href: "/orders" },
-    { label: t("nav.studio"), href: "/about" },
   ];
 
   // Scroll detection for enhanced shadow / blur
@@ -178,12 +179,17 @@ export function Navbar({
             href="/"
             className="group flex items-center gap-2 sm:gap-2.5 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B35] rounded-lg shrink"
           >
-            <div className="flex size-8 sm:size-9 items-center justify-center rounded-xl bg-[#111318] dark:bg-white/10 text-white shadow-sm transition-transform duration-300 group-hover:scale-105 border border-white/10 shrink-0">
-              <Layers className="size-5 text-[#FF6B35]" />
-            </div>
+            <Image
+              src="/trio_logo.svg"
+              alt="Trio"
+              width={38}
+              height={32}
+              className="h-8 sm:h-9 w-auto dark:invert transition-transform duration-300 group-hover:scale-105 shrink-0"
+              priority
+            />
             <div className="flex flex-col min-w-0">
               <span className="font-heading text-base sm:text-lg font-black tracking-tight text-foreground leading-none truncate">
-                PRINT<span className="text-[#FF6B35]">STUDIO</span>
+                TRIO
               </span>
               <span className="hidden min-[340px]:block text-[10px] font-mono tracking-widest text-muted-foreground uppercase truncate">
                 {t("common.brandTagline")}
@@ -195,6 +201,31 @@ export function Navbar({
           <div className="hidden lg:flex items-center gap-1 xl:gap-2">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
+              if (item.isCustomPrint) {
+                return (
+                  <CustomPrintLink
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "relative px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B35]",
+                      isActive
+                        ? "text-foreground font-semibold bg-muted/60"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                    )}
+                  >
+                    <span>{item.label}</span>
+                    {CUSTOM_PRINTS_ENABLED && item.badge && (
+                      <Badge variant="electric" size="sm" className="py-0 px-1.5 text-[10px]">
+                        {item.badge}
+                      </Badge>
+                    )}
+                    {isActive && (
+                      <span className="absolute bottom-0 inset-x-3 h-0.5 bg-[#FF6B35] rounded-full" />
+                    )}
+                  </CustomPrintLink>
+                );
+              }
+
               return (
                 <Link
                   key={item.href}
@@ -330,14 +361,16 @@ export function Navbar({
                         <span>{t("common.trackOrder")}</span>
                       </Link>
 
-                      <Link
-                        href="/custom-prints/my-requests"
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-muted transition-colors"
-                      >
-                        <UploadCloud className="size-4 text-[#FF6B35]" />
-                        <span>{t("customPrintApp.myRequestsCta")}</span>
-                      </Link>
+                      {CUSTOM_PRINTS_ENABLED && (
+                        <Link
+                          href="/custom-prints/my-requests"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                        >
+                          <UploadCloud className="size-4 text-[#FF6B35]" />
+                          <span>{t("customPrintApp.myRequestsCta")}</span>
+                        </Link>
+                      )}
 
                       <Link
                         href="/profile/addresses"
@@ -379,14 +412,23 @@ export function Navbar({
 
             {/* Instant Quote CTA Button */}
             <div className="hidden sm:block">
-              <Button
-                variant="default"
-                size="sm"
-                iconRight={<ArrowRight className="size-3.5 rtl:rotate-180" />}
-                asChild
-              >
-                <Link href="/custom-prints">{t("common.instantQuote")}</Link>
-              </Button>
+              {CUSTOM_PRINTS_ENABLED ? (
+                <Button
+                  variant="default"
+                  size="sm"
+                  iconRight={<ArrowRight className="size-3.5 rtl:rotate-180" />}
+                  asChild
+                >
+                  <Link href="/custom-prints">{t("common.instantQuote")}</Link>
+                </Button>
+              ) : (
+                <CustomPrintLink
+                  href="/custom-prints"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground border border-border/80 px-3 py-1.5 rounded-xl bg-muted/30"
+                >
+                  <span>{t("common.instantQuote")}</span>
+                </CustomPrintLink>
+              )}
             </div>
 
             {/* Mobile Hamburger Button */}
@@ -493,6 +535,29 @@ export function Navbar({
 
             {navItems.map((item) => {
               const isActive = pathname === item.href;
+              if (item.isCustomPrint) {
+                return (
+                  <CustomPrintLink
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      "flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-medium transition-colors",
+                      isActive
+                        ? "bg-white/10 text-white font-semibold"
+                        : "text-gray-300 hover:bg-white/5 hover:text-white"
+                    )}
+                  >
+                    <span className="font-heading">{item.label}</span>
+                    {CUSTOM_PRINTS_ENABLED && item.badge && (
+                      <Badge variant="electric" size="sm">
+                        {item.badge}
+                      </Badge>
+                    )}
+                  </CustomPrintLink>
+                );
+              }
+
               return (
                 <Link
                   key={item.href}
@@ -517,17 +582,27 @@ export function Navbar({
           </div>
 
           <div className="mt-6 pt-5 border-t border-white/10 flex flex-col gap-3">
-            <Button
-              variant="default"
-              size="lg"
-              className="w-full justify-center"
-              iconRight={<ArrowRight className="size-4 rtl:rotate-180" />}
-              asChild
-            >
-              <Link href="/custom-prints" onClick={() => setMobileMenuOpen(false)}>
+            {CUSTOM_PRINTS_ENABLED ? (
+              <Button
+                variant="default"
+                size="lg"
+                className="w-full justify-center"
+                iconRight={<ArrowRight className="size-4 rtl:rotate-180" />}
+                asChild
+              >
+                <Link href="/custom-prints" onClick={() => setMobileMenuOpen(false)}>
+                  {t("common.requestCustomPrint")}
+                </Link>
+              </Button>
+            ) : (
+              <CustomPrintLink
+                href="/custom-prints"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full justify-center h-12 rounded-xl bg-white/5 border border-white/10 text-gray-300 font-semibold text-sm px-4"
+              >
                 {t("common.requestCustomPrint")}
-              </Link>
-            </Button>
+              </CustomPrintLink>
+            )}
 
             <Button
               variant="charcoal"
@@ -544,10 +619,6 @@ export function Navbar({
             <div className="mt-4 flex items-center justify-center gap-6 text-xs text-gray-400">
               <Link href="/orders" onClick={() => setMobileMenuOpen(false)}>
                 {t("common.trackOrder")}
-              </Link>
-              <span>•</span>
-              <Link href="/about" onClick={() => setMobileMenuOpen(false)}>
-                {t("nav.studio")}
               </Link>
             </div>
           </div>

@@ -29,7 +29,7 @@ export function AdminShell({ children }: AdminShellProps) {
           </div>
           <div className="text-center">
             <h2 className="font-heading font-black text-lg tracking-tight">
-              PRINT STUDIO OPS
+              TRIO OPS
             </h2>
             <p className="text-xs text-gray-400 font-mono mt-1">
               Verifying administrative credentials...

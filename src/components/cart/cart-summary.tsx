@@ -12,6 +12,7 @@ import {
   Cog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CUSTOM_PRINTS_ENABLED } from "@/lib/config/features";
 import { CartSummary as CartSummaryType } from "@/lib/cart/context";
 import { useTranslation } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
@@ -113,19 +114,21 @@ export function CartSummaryCard({ summary, className }: CartSummaryCardProps) {
       </div>
 
       {/* Custom 3D Print Upsell Prompt */}
-      <div className="p-4 rounded-2xl bg-muted/30 border border-border/60 text-xs space-y-2">
-        <div className="flex items-center gap-1.5 font-bold text-foreground">
-          <Cog className="size-3.5 text-[#FF6B35]" />
-          <span>{t("cart.customPrintPrompt")}</span>
+      {CUSTOM_PRINTS_ENABLED && (
+        <div className="p-4 rounded-2xl bg-muted/30 border border-border/60 text-xs space-y-2">
+          <div className="flex items-center gap-1.5 font-bold text-foreground">
+            <Cog className="size-3.5 text-[#FF6B35]" />
+            <span>{t("cart.customPrintPrompt")}</span>
+          </div>
+          <Link
+            href="/custom-prints"
+            className="inline-flex items-center gap-1 text-[#FF6B35] font-semibold hover:underline"
+          >
+            <span>{t("cart.customPrintLink")}</span>
+            <ArrowRight className="size-3 rtl:rotate-180" />
+          </Link>
         </div>
-        <Link
-          href="/custom-prints"
-          className="inline-flex items-center gap-1 text-[#FF6B35] font-semibold hover:underline"
-        >
-          <span>{t("cart.customPrintLink")}</span>
-          <ArrowRight className="size-3 rtl:rotate-180" />
-        </Link>
-      </div>
+      )}
     </div>
   );
 }

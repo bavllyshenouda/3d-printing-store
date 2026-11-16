@@ -138,6 +138,12 @@ export async function sendOrderConfirmationWhatsApp(orderId: string) {
     paymentMethod: order.payment_method,
   });
 
+  if (!sendResult.success) {
+    console.warn(
+      `WhatsApp order confirmation failed to send for order #${order.order_number}: ${sendResult.error || "Missing configuration or dispatch failure"}. Recording message as failed.`
+    );
+  }
+
   const bodyText = `Order #${order.order_number} confirmation request sent to ${order.customer_phone}`;
 
   // 4. Log message in whatsapp_messages table

@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CUSTOM_PRINTS_ENABLED } from "@/lib/config/features";
 import { useAuth } from "@/lib/auth/context";
 import { useTranslation } from "@/lib/i18n/context";
 import { EGYPTIAN_PHONE_REGEX } from "@/lib/validations/auth";
@@ -328,17 +329,19 @@ export function ProfileView() {
                   </div>
                 </Link>
 
-                <Link
-                  href="/custom-prints"
-                  className="flex items-center justify-between p-3.5 rounded-2xl border border-border/60 bg-muted/20 hover:bg-muted/50 hover:border-[#FF6B35]/40 transition-all text-sm font-medium text-foreground group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-xl bg-white dark:bg-[#15181E] text-[#FF6B35] shadow-xs">
-                      <UploadCloud className="size-4" />
+                {CUSTOM_PRINTS_ENABLED && (
+                  <Link
+                    href="/custom-prints"
+                    className="flex items-center justify-between p-3.5 rounded-2xl border border-border/60 bg-muted/20 hover:bg-muted/50 hover:border-[#FF6B35]/40 transition-all text-sm font-medium text-foreground group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 items-center justify-center rounded-xl bg-white dark:bg-[#15181E] text-[#FF6B35] shadow-xs">
+                        <UploadCloud className="size-4" />
+                      </div>
+                      <span>{t("profile.customPrintsLink")}</span>
                     </div>
-                    <span>{t("profile.customPrintsLink")}</span>
-                  </div>
-                </Link>
+                  </Link>
+                )}
 
                 <Link
                   href="/profile/addresses"

@@ -26,7 +26,7 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: "Product Not Found | PrintStudio",
+      title: "Product Not Found | Trio",
       description: "The requested 3D model could not be found.",
     };
   }
@@ -36,15 +36,15 @@ export async function generateMetadata({
     product.images?.[0]?.image_url;
 
   return {
-    title: `${product.name} | PrintStudio 3D`,
+    title: `${product.name} | Trio`,
     description:
       product.description ||
-      `Precision 3D printed ${product.name} in ${product.material || "high-grade polymer"} by PrintStudio.`,
+      `Precision 3D printed ${product.name} in ${product.material || "high-grade polymer"} by Trio.`,
     openGraph: {
-      title: `${product.name} | PrintStudio 3D`,
+      title: `${product.name} | Trio`,
       description:
         product.description ||
-        `Precision 3D printed ${product.name} in ${product.material || "high-grade polymer"} by PrintStudio.`,
+        `Precision 3D printed ${product.name} in ${product.material || "high-grade polymer"} by Trio.`,
       images: primaryImage ? [{ url: primaryImage }] : [],
     },
   };

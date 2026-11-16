@@ -5,7 +5,6 @@ import {
   CategoryGrid,
   CustomPrintFeature,
   HowItWorks,
-  WhyChooseUs,
   FinalCta,
 } from "@/components/home";
 import { getFeaturedProducts, getCategories } from "@/lib/data/homepage";
@@ -35,10 +34,7 @@ export default async function HomePage() {
       {/* 5. How It Works */}
       <HowItWorks />
 
-      {/* 6. Why Choose Us */}
-      <WhyChooseUs />
-
-      {/* 7. Final Call to Action */}
+      {/* 6. Final Call to Action */}
       <FinalCta />
     </div>
   );

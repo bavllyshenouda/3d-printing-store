@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { AdminShell } from "@/components/admin/layout/admin-shell";
 
 export const metadata: Metadata = {
-  title: "Admin Operations | PRINT STUDIO 3D",
+  title: "Admin Operations | Trio",
   description: "Administrative console and studio management portal.",
   robots: {
     index: false,

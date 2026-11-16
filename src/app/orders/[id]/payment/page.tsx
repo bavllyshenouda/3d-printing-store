@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { PaymentExperience } from "@/components/payment/payment-experience";
 
 export const metadata: Metadata = {
-  title: "Secure Payment & Transfer Verification | PrintStudio",
+  title: "Secure Payment & Transfer Verification | Trio",
   description: "Transfer instructions, proof submission, and live payment verification status.",
 };
 

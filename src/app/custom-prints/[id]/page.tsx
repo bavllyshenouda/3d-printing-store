@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { RequestDetailsView } from "@/components/custom-prints/request-details-view";
 
 export const metadata: Metadata = {
-  title: "Custom Print Request & Quotes | PrintStudio",
+  title: "Custom Print Request & Quotes | Trio",
   description:
     "Review engineering quotes, inspect attached 3D models, and accept production orders.",
 };

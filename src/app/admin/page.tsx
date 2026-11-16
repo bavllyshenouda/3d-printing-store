@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { AdminOverviewView } from "@/components/admin/overview/admin-overview-view";
 
 export const metadata: Metadata = {
-  title: "Dashboard Overview | PRINT STUDIO Ops",
+  title: "Dashboard Overview | Trio Ops",
   description: "Operational metrics and studio activity overview.",
 };
 

@@ -171,7 +171,7 @@ export function AdminOverviewView() {
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs font-mono text-[#FF6B35]">
             <ShieldCheck className="size-4" />
-            <span>STUDIO OPERATIONS CONSOLE</span>
+            <span>TRIO OPERATIONS CONSOLE</span>
           </div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-heading font-black tracking-tight">
             Welcome back, {displayName}

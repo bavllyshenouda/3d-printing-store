@@ -3,7 +3,7 @@ import { Container } from "@/components/layout/container";
 import { RequestForm } from "@/components/custom-prints/request-form";
 
 export const metadata: Metadata = {
-  title: "New Custom 3D Print Request | PrintStudio",
+  title: "New Custom 3D Print Request | Trio",
   description:
     "Upload your STL/3MF files and specify materials, infill, and mechanical requirements.",
 };

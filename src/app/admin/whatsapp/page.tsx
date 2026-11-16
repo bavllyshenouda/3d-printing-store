@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { WhatsAppLogsTable } from "@/components/admin/whatsapp/whatsapp-logs-table";
 
 export const metadata: Metadata = {
-  title: "WhatsApp Operations | PRINT STUDIO Ops",
+  title: "WhatsApp Operations | Trio Ops",
   description: "Automated WhatsApp notification audit logs and manual broadcast dispatch.",
 };
 
